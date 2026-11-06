@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>مشغل الفيديو</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/shaka-player.compiled.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 16px; background: #101010; color: #fff; font-family: Arial, sans-serif; }
+    .player-wrap { width: 100%; max-width: 1000px; }
+    h1 { font-size: 20px; margin: 0 0 12px; }
+    video { display: block; width: 100%; max-height: 75vh; background: #000; border-radius: 10px; }
+    #status { min-height: 1.5em; color: #ddd; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <main class="player-wrap">
+    <h1>مشغل الفيديو</h1>
+    <video id="video" controls playsinline></video>
+    <p id="status" role="status">أضف رابط MPD أو HLS مصرحًا لك بتشغيله داخل الكود.</p>
+  </main>
+  <script>
+    // استخدم رابط بث تملكه أو لديك تصريح بتشغيله.
+    // يدعم Shaka Player ملفات DASH (MPD) و HLS غير المحمية بـ DRM.
+    const manifestUri = "PASTE_YOUR_AUTHORIZED_MPD_OR_M3U8_URL_HERE";
+
+    async function initPlayer() {
+      const status = document.getElementById("status");
+      const video = document.getElementById("video");
+
+      shaka.polyfill.installAll();
+      if (!shaka.Player.isBrowserSupported()) {
+        status.textContent = "المتصفح لا يدعم Shaka Player.";
+        return;
+      }
+
+      const player = new shaka.Player(video);
+      player.addEventListener("error", (event) => {
+        console.error("Shaka error:", event.detail);
+        status.textContent = "تعذر تشغيل الفيديو. تحقق من الرابط وصلاحية الوصول وتوافق المتصفح.";
+      });
+
+      if (!manifestUri || manifestUri.includes("PASTE_YOUR_")) {
+        status.textContent = "ضع رابط بث MPD أو M3U8 المصرح به داخل متغير manifestUri.";
+        return;
+      }
+
+      try {
+        status.textContent = "جارٍ تحميل الفيديو…";
+        await player.load(manifestUri);
+        status.textContent = "تم تحميل الفيديو. اضغط تشغيل.";
+      } catch (error) {
+        console.error("Playback error:", error);
+        status.textContent = "فشل التحميل. قد يكون الرابط غير متاح أو يتطلب مصادقة/ترخيص DRM رسميًا.";
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", initPlayer);
+  </script>
+</body>
+</html>
