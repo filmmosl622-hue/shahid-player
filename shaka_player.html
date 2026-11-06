@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مشغل فيديو</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/shaka-player.compiled.js"></script>
+  <style>
+    body {
+      margin: 0;
+      background-color: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    div[data-shaka-player-container] {
+      width: 100%;
+      max-width: 1000px;
+    }
+    video {
+      width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+  <div data-shaka-player-container>
+    <video data-shaka-player id="video" autoplay controls playsinline></video>
+  </div>
+
+  <script>
+    // ضع هنا رابط بث تملك حق تشغيله أو لديك تصريح باستخدامه.
+    const manifestUri = "ضع_رابط_ملف_البث_هنا";
+
+    async function initApp() {
+      shaka.polyfill.installAll();
+
+      if (!shaka.Player.isBrowserSupported()) {
+        console.error("المتصفح لا يدعم Shaka Player.");
+        return;
+      }
+
+      const video = document.getElementById("video");
+      const player = new shaka.Player(video);
+
+      try {
+        await player.load(manifestUri);
+        console.log("تم تحميل الفيديو بنجاح.");
+      } catch (error) {
+        console.error("حدث خطأ أثناء تشغيل الفيديو:", error);
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", initApp);
+  </script>
+</body>
+</html>
