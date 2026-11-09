@@ -1,74 +1,76 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>مشغل شاهد</title>
-  <!-- استدعاء مكتبة Shaka Player وتصميمها -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/shaka-player.compiled.js"></script>
-  <style>
-    body {
-      margin: 0;
-      background-color: #000;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    div[data-shaka-player-container] {
-      width: 100%;
-      max-width: 1000px;
-    }
-    video {
-      width: 100%;
-      height: auto;
-    }
-  </style>
-</head>
-<body>
+_3806y0s7s1.jpg" >
+    <div class="episode-title">فرسان قريح ج2 </div>
+</a>
 
-  <div data-shaka-player-container>
-    <video data-shaka-player id="video" autoplay controls></video>
-  </div>
 
-  <script>
-    const manifestUri = 'https://mbcvod-enc.edgenextcdn.net/vod/aws/3060004302-STXML/e94454f5219e4e47b0ce9c4ec0b4d2a6/226eaf4a243f4bfb9ebb0bec3ac58d43/f93a7f08a52a4bab90cd98ed665b3f52/index.mpd?audio_language=ar&subtitle_language=en,ar&video_codec=H264&video_framerate=25-25&video_height=144-1080';
+<a href="go:mmknn1" >
+    <img src="https://l.top4top.io/p_38045zhtt1.jpg" >
+    <div class="episode-title">ممكن</div>
+</a>
 
-    async function initApp() {
-      shaka.polyfill.installAll();
-      if (!shaka.Player.isBrowserSupported()) {
-        console.error('المتصفح لا يدعم Shaka Player!');
-        return;
-      }
 
-      const video = document.getElementById('video');
-      const player = new shaka.Player(video);
+<a href="go:wardf1" >
+    <img src="https://i.ibb.co/7d3MN2gC/315x420-9bf77df4b38feceddf47c47d093f39058574b4acfeeb70f59892c49a2e8fbe29.jpg" >
+    <div class="episode-title">وردعلي فل وياسمين</div>
+</a>
 
-      // مفتاح فك التشفير الجديد المستخرج من الأمر
-      player.configure({
-        drm: {
-          clearKeys: {
-            '4fea5663ab2a4786af8116cd961270e2': '6ce6b9c5cce8e8027782c37d3289e55e'
-          }
-        }
-      });
 
-      // الـ Headers المطلوبة لتجاوز حماية شاهد
-      player.getNetworkingEngine().registerRequestFilter((type, request) => {
-        request.headers['Origin'] = 'https://shahid.mbc.net';
-        request.headers['Referer'] = 'https://shahid.mbc.net/';
-        request.headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:159.0) Gecko/20100101 Firefox/159.0';
-      });
 
-      try {
-        await player.load(manifestUri);
-        console.log('تم تحميل الفيديو بنجاح!');
-      } catch (e) {
-        console.error('حدث خطأ أثناء التشغيل:', e);
-      }
-    }
 
-    document.addEventListener('DOMContentLoaded', initApp);
-  </script>
+<a href="go:sister1" >
+    <img src="https://b.top4top.io/p_380216q0f1.png" >
+    <div class="episode-title">سستر فخرية</div>
+</a>
+
+
+
+<a href="go:lill1" >
+    <img src="https://j.top4top.io/p_3785r88t91.jpg" >
+    <div class="episode-title">ليل</div>
+</a>
+
+
+
+
+<a href="go:horghn1" >
+    <img src="https://f.top4top.io/p_37813ez1a1.jpg" >
+    <div class="episode-title">حفرة جهنم</div>
+</a>
+
+
+<a href="go:fransw1" >
+    <img src="https://j.top4top.io/p_3956urq7f1.jpg" >
+    <div class="episode-title">الفرنساوي</div>
+</a>
+
+<a href="go:game5" >
+    <img src="https://h.top4top.io/p_3749bgngu1.jpg" >
+    <div class="episode-title">اللعبة 5 </div>
+</a>
+
+
+<a href="go:faqra1" >
+    <img src="https://i.ibb.co/tTwTQTmv/Whats-App-Image-2026-01-27-at-1-29-26-PM.jpg" >
+    <div class="episode-title">بطل العالم</div>
+</a>
+
+<a href="go:babaa1" >
+    <img src="https://d.top4top.io/p_3679uqsw81.jpeg" >
+    <div class="episode-title">بيت بابا</div>
+</a>
+
+<a href="go:eeladl1" >
+    <img src="https://j.top4top.io/p_36793j5sr1.jpeg" >
+    <div class="episode-title">قسمة العدل</div>
+</a>
+
+<a href="go:leba2" >
+    <img src="https://b.top4top.io/p_3679ipfay1.jpeg" >
+    <div class="episode-title">لعبة وقلبت بجد</div>
+</a>
+
+</div>
+
+
 </body>
 </html>
