@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MPD & ClearKey Test Player</title>
+  <title>MPD & ClearKey Player</title>
   <!-- مكتبة Shaka Player لتشغيل DASH و ClearKey -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.11.2/shaka-player.ui.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.11.2/controls.min.css">
@@ -113,6 +113,12 @@
     .btn-submit:hover { background: #e0e0e0; }
     .btn-clear { background: #2b2b2b; color: #ccc; flex: 0.4; }
     .btn-clear:hover { background: #3a3a3a; }
+    .btn-copy {
+      background: #8b0000;
+      color: #fff;
+      margin-top: 4px;
+    }
+    .btn-copy:hover { background: #a80000; }
     .status-box {
       font-size: 0.82rem;
       padding: 8px 10px;
@@ -125,6 +131,42 @@
     }
     .status-error { border-left-color: #ff2a2a; color: #ff6b6b; }
     .status-success { border-left-color: #2ecc71; color: #2ecc71; }
+
+    /* وضع العميل: الفيديو فقط بملء الشاشة */
+    body.client-mode {
+      padding: 0;
+      background: #000;
+      overflow: hidden;
+    }
+    body.client-mode .header,
+    body.client-mode .controls-panel {
+      display: none !important;
+    }
+    body.client-mode .container {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      max-width: none;
+      padding: 0;
+      margin: 0;
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+      background: #000;
+    }
+    body.client-mode .player-wrapper {
+      width: 100%;
+      height: 100%;
+      min-height: 100vh;
+      border: none;
+      border-radius: 0;
+    }
+    body.client-mode .player-wrapper video {
+      width: 100%;
+      height: 100%;
+      max-height: none;
+      object-fit: contain;
+    }
   </style>
 </head>
 <body>
@@ -137,7 +179,7 @@
   <div class="container">
     <!-- شاشة العرض -->
     <div class="player-wrapper" data-shaka-player-container>
-      <video id="video" data-shaka-player autoplay playsinline></video>
+      <video id="video" data-shaka-player autoplay playsinline controls></video>
     </div>
 
     <!-- لوحة الإدخال مع القيم التجريبية الجاهزة -->
@@ -162,6 +204,8 @@
         <button class="btn-submit" onclick="initAndPlay()">Submit</button>
       </div>
 
+      <button class="btn-copy" onclick="copyClientLink()">نسخ لينك الفيديو فقط للعميل</button>
+
       <div id="status" class="status-box">Ready to test stream...</div>
     </div>
   </div>
@@ -170,9 +214,76 @@
     let player;
     let ui;
 
-    window.addEventListener('DOMContentLoaded', () => {
+    function buildClearKeysMap(kidsRaw, keysRaw) {
+      const clearKeysMap = {};
+      if (!kidsRaw) return clearKeysMap;
+
+      const kidLines = kidsRaw.split(/[\r\n,]+/).map(s => s.trim()).filter(Boolean);
+      const keyLines = (keysRaw || '').split(/[\r\n,]+/).map(s => s.trim()).filter(Boolean);
+
+      kidLines.forEach((line, index) => {
+        if (line.includes(':')) {
+          const [kId, kVal] = line.split(':');
+          if (kId && kVal) {
+            clearKeysMap[kId.trim().toLowerCase()] = kVal.trim().toLowerCase();
+          }
+        } else if (keyLines[index]) {
+          clearKeysMap[line.toLowerCase()] = keyLines[index].toLowerCase();
+        }
+      });
+
+      return clearKeysMap;
+    }
+
+    function getClientDirectUrl() {
+      const mpdUrl = document.getElementById('mpdUrl').value.trim();
+      const kidsRaw = document.getElementById('kidsInput').value.trim();
+      const keysRaw = document.getElementById('keysInput').value.trim();
+
+      const map = buildClearKeysMap(kidsRaw, keysRaw);
+      const combinedKeys = Object.entries(map)
+        .map(([k, v]) => `${k}:${v}`)
+        .join(',');
+
+      const baseUrl = window.location.origin + window.location.pathname;
+      const params = new URLSearchParams();
+      params.set('client', '1');
+      if (mpdUrl) params.set('mpd', mpdUrl);
+      if (combinedKeys) params.set('keys', combinedKeys);
+
+      return `${baseUrl}?${params.toString()}`;
+    }
+
+    async function copyClientLink() {
+      const link = getClientDirectUrl();
+      try {
+        await navigator.clipboard.writeText(link);
+        setStatus('Client video link copied!', 'success');
+      } catch {
+        prompt('انسخ لينك العميل المباشر:', link);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
       shaka.polyfill.installAll();
-      // تحميل القيم المحفوظة فقط إذا كان المستخدم قد عدّلها من قبل
+
+      const params = new URLSearchParams(window.location.search);
+      const isClientMode = params.get('client') === '1' || params.get('embed') === '1';
+      const urlMpd = params.get('mpd');
+      const urlKeys = params.get('keys');
+
+      if (isClientMode) {
+        document.body.classList.add('client-mode');
+        if (urlMpd) document.getElementById('mpdUrl').value = urlMpd;
+        if (urlKeys) {
+          document.getElementById('kidsInput').value = urlKeys;
+          document.getElementById('keysInput').value = '';
+        }
+        await initAndPlay(true);
+        return;
+      }
+
+      // وضع الاختبار العادي: تحميل القيم المحفوظة إن وجدت
       if (localStorage.getItem('custom_mpd')) document.getElementById('mpdUrl').value = localStorage.getItem('custom_mpd');
       if (localStorage.getItem('custom_kids')) document.getElementById('kidsInput').value = localStorage.getItem('custom_kids');
       if (localStorage.getItem('custom_keys')) document.getElementById('keysInput').value = localStorage.getItem('custom_keys');
@@ -194,19 +305,21 @@
       setStatus('Cleared.');
     }
 
-    async function initAndPlay() {
+    async function initAndPlay(silentMode = false) {
       const mpdUrl = document.getElementById('mpdUrl').value.trim();
       const kidsRaw = document.getElementById('kidsInput').value.trim();
       const keysRaw = document.getElementById('keysInput').value.trim();
 
       if (!mpdUrl) {
-        setStatus('Error: Please enter an MPD URL.', 'error');
+        if (!silentMode) setStatus('Error: Please enter an MPD URL.', 'error');
         return;
       }
 
-      localStorage.setItem('custom_mpd', mpdUrl);
-      localStorage.setItem('custom_kids', kidsRaw);
-      localStorage.setItem('custom_keys', keysRaw);
+      if (!silentMode) {
+        localStorage.setItem('custom_mpd', mpdUrl);
+        localStorage.setItem('custom_kids', kidsRaw);
+        localStorage.setItem('custom_keys', keysRaw);
+      }
 
       const video = document.getElementById('video');
       const container = document.querySelector('[data-shaka-player-container]');
@@ -216,24 +329,13 @@
         await player.attach(video);
         ui = new shaka.ui.Overlay(player, container, video);
         player.addEventListener('error', (e) => {
-          setStatus(`Player Error (${e.detail.code}): ${e.detail.message || 'Check console/CORS'}`, 'error');
-        });
-      }
-
-      const clearKeysMap = {};
-      if (kidsRaw) {
-        const kidLines = kidsRaw.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-        const keyLines = keysRaw.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-
-        kidLines.forEach((line, index) => {
-          if (line.includes(':')) {
-            const [kId, kVal] = line.split(':');
-            if (kId && kVal) clearKeysMap[kId.trim().toLowerCase()] = kVal.trim().toLowerCase();
-          } else if (keyLines[index]) {
-            clearKeysMap[line.toLowerCase()] = keyLines[index].toLowerCase();
+          if (!silentMode) {
+            setStatus(`Player Error (${e.detail.code}): ${e.detail.message || 'Check console/CORS'}`, 'error');
           }
         });
       }
+
+      const clearKeysMap = buildClearKeysMap(kidsRaw, keysRaw);
 
       player.configure({
         drm: {
@@ -241,12 +343,15 @@
         }
       });
 
-      setStatus('Loading stream...');
+      if (!silentMode) setStatus('Loading stream...');
       try {
         await player.load(mpdUrl);
-        setStatus('Stream loaded successfully!', 'success');
+        if (!silentMode) setStatus('Stream loaded successfully!', 'success');
+        video.play().catch(() => {});
       } catch (error) {
-        setStatus(`Load Failed (Code ${error.code}): Verify MPD URL, Keys, or CORS policy.`, 'error');
+        if (!silentMode) {
+          setStatus(`Load Failed (Code ${error.code}): Verify MPD URL, Keys, or CORS policy.`, 'error');
+        }
       }
     }
   </script>
