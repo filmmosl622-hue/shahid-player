@@ -3,357 +3,77 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MPD & ClearKey Player</title>
-  <!-- مكتبة Shaka Player لتشغيل DASH و ClearKey -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.11.2/shaka-player.ui.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.11.2/controls.min.css">
+  <title>Player</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.11.2/shaka-player.compiled.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body {
-      background-color: #0d0d0d;
-      color: #e5e5e5;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px;
-    }
-    .header {
-      width: 100%;
-      max-width: 1200px;
-      padding: 15px 20px;
-      background: #141414;
-      border: 1px solid #262626;
-      border-radius: 10px;
-      margin-bottom: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .header h2 { font-size: 1.2rem; color: #ff2a2a; letter-spacing: 0.5px; }
-    .container {
-      width: 100%;
-      max-width: 1200px;
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 20px;
-      background: #141414;
-      border: 1px solid #8b0000;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 0 25px rgba(229, 9, 20, 0.15);
-    }
-    @media (max-width: 850px) {
-      .container { grid-template-columns: 1fr; }
-    }
-    .player-wrapper {
-      width: 100%;
-      background: #000;
-      border-radius: 8px;
-      overflow: hidden;
-      border: 1px solid #2a2a2a;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 360px;
-    }
-    .player-wrapper video {
-      width: 100%;
-      height: 100%;
-      max-height: 520px;
-    }
-    .controls-panel {
-      background: #1a1a1a;
-      padding: 18px;
-      border-radius: 8px;
-      border: 1px solid #2a2a2a;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    label {
-      font-size: 0.85rem;
-      color: #aaa;
-      margin-bottom: 4px;
-      display: block;
-      text-align: left;
-      direction: ltr;
-    }
-    input, textarea {
-      width: 100%;
-      background: #111;
-      border: 1px solid #333;
-      color: #fff;
-      padding: 10px 12px;
-      border-radius: 6px;
-      font-size: 0.9rem;
-      direction: ltr;
-      text-align: left;
-      outline: none;
-      transition: border 0.2s;
-    }
-    input:focus, textarea:focus { border-color: #ff2a2a; }
-    textarea { resize: vertical; min-height: 85px; font-family: monospace; }
-    .btn-group {
-      display: flex;
-      gap: 10px;
-      margin-top: 8px;
-    }
-    button {
-      flex: 1;
-      padding: 12px;
-      border: none;
-      border-radius: 6px;
-      font-weight: bold;
-      font-size: 0.95rem;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    .btn-submit { background: #ffffff; color: #000; }
-    .btn-submit:hover { background: #e0e0e0; }
-    .btn-clear { background: #2b2b2b; color: #ccc; flex: 0.4; }
-    .btn-clear:hover { background: #3a3a3a; }
-    .btn-copy {
-      background: #8b0000;
-      color: #fff;
-      margin-top: 4px;
-    }
-    .btn-copy:hover { background: #a80000; }
-    .status-box {
-      font-size: 0.82rem;
-      padding: 8px 10px;
-      border-radius: 6px;
-      background: #111;
-      border-left: 3px solid #555;
-      direction: ltr;
-      text-align: left;
-      word-break: break-word;
-    }
-    .status-error { border-left-color: #ff2a2a; color: #ff6b6b; }
-    .status-success { border-left-color: #2ecc71; color: #2ecc71; }
-
-    /* وضع العميل: الفيديو فقط بملء الشاشة */
-    body.client-mode {
-      padding: 0;
-      background: #000;
-      overflow: hidden;
-    }
-    body.client-mode .header,
-    body.client-mode .controls-panel {
-      display: none !important;
-    }
-    body.client-mode .container {
-      display: block;
-      width: 100vw;
-      height: 100vh;
-      max-width: none;
-      padding: 0;
+    * {
+      box-sizing: border-box;
       margin: 0;
-      border: none;
-      border-radius: 0;
-      box-shadow: none;
+      padding: 0;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
       background: #000;
+      overflow: hidden;
     }
-    body.client-mode .player-wrapper {
+    video {
       width: 100%;
       height: 100%;
-      min-height: 100vh;
-      border: none;
-      border-radius: 0;
-    }
-    body.client-mode .player-wrapper video {
-      width: 100%;
-      height: 100%;
-      max-height: none;
       object-fit: contain;
+      background: #000;
+      display: block;
     }
   </style>
 </head>
 <body>
 
-  <div class="header">
-    <h2>Test Player — MPD & ClearKey</h2>
-    <span style="font-size: 0.8rem; color: #888;">Shaka Engine</span>
-  </div>
-
-  <div class="container">
-    <!-- شاشة العرض -->
-    <div class="player-wrapper" data-shaka-player-container>
-      <video id="video" data-shaka-player autoplay playsinline controls></video>
-    </div>
-
-    <!-- لوحة الإدخال مع القيم التجريبية الجاهزة -->
-    <div class="controls-panel">
-      <div>
-        <label>MPD URL</label>
-        <input type="text" id="mpdUrl" value="https://orng.shahid.net/out/v1/2f7b591c351145ea81b18043ff9ea512/226eaf4a243f4bfb9ebb0bec3ac58d43/f93a7f08a52a4bab90cd98ed665b3f52/index.mpd">
-      </div>
-
-      <div>
-        <label>KIDs (separated by new lines) or KID:KEY</label>
-        <textarea id="kidsInput">0008a143bf384bfaa7361952e1ac6bdf:ff9a1fd2e9702664b200a0c55c263c34</textarea>
-      </div>
-
-      <div>
-        <label>Keys (separated by new lines)</label>
-        <textarea id="keysInput">0008a143bf384bfaa7361952e1ac6bdf:ff9a1fd2e9702664b200a0c55c263c34</textarea>
-      </div>
-
-      <div class="btn-group">
-        <button class="btn-clear" onclick="clearFields()">مسح</button>
-        <button class="btn-submit" onclick="initAndPlay()">Submit</button>
-      </div>
-
-      <button class="btn-copy" onclick="copyClientLink()">نسخ لينك الفيديو فقط للعميل</button>
-
-      <div id="status" class="status-box">Ready to test stream...</div>
-    </div>
-  </div>
+  <video id="video" controls autoplay playsinline></video>
 
   <script>
-    let player;
-    let ui;
+    const DEFAULT_MPD = "https://orng.shahid.net/out/v1/2f7b591c351145ea81b18043ff9ea512/226eaf4a243f4bfb9ebb0bec3ac58d43/f93a7f08a52a4bab90cd98ed665b3f52/index.mpd";
+    const DEFAULT_KEYS = "0008a143bf384bfaa7361952e1ac6bdf:ff9a1fd2e9702664b200a0c55c263c34";
 
-    function buildClearKeysMap(kidsRaw, keysRaw) {
-      const clearKeysMap = {};
-      if (!kidsRaw) return clearKeysMap;
-
-      const kidLines = kidsRaw.split(/[\r\n,]+/).map(s => s.trim()).filter(Boolean);
-      const keyLines = (keysRaw || '').split(/[\r\n,]+/).map(s => s.trim()).filter(Boolean);
-
-      kidLines.forEach((line, index) => {
-        if (line.includes(':')) {
-          const [kId, kVal] = line.split(':');
-          if (kId && kVal) {
-            clearKeysMap[kId.trim().toLowerCase()] = kVal.trim().toLowerCase();
+    function parseKeys(raw) {
+      const map = {};
+      if (!raw) return map;
+      raw.split(/[\r\n,]+/).forEach(line => {
+        const clean = line.trim();
+        if (clean.includes(":")) {
+          const [kid, key] = clean.split(":");
+          if (kid && key) {
+            map[kid.trim().toLowerCase()] = key.trim().toLowerCase();
           }
-        } else if (keyLines[index]) {
-          clearKeysMap[line.toLowerCase()] = keyLines[index].toLowerCase();
         }
       });
-
-      return clearKeysMap;
+      return map;
     }
 
-    function getClientDirectUrl() {
-      const mpdUrl = document.getElementById('mpdUrl').value.trim();
-      const kidsRaw = document.getElementById('kidsInput').value.trim();
-      const keysRaw = document.getElementById('keysInput').value.trim();
-
-      const map = buildClearKeysMap(kidsRaw, keysRaw);
-      const combinedKeys = Object.entries(map)
-        .map(([k, v]) => `${k}:${v}`)
-        .join(',');
-
-      const baseUrl = window.location.origin + window.location.pathname;
-      const params = new URLSearchParams();
-      params.set('client', '1');
-      if (mpdUrl) params.set('mpd', mpdUrl);
-      if (combinedKeys) params.set('keys', combinedKeys);
-
-      return `${baseUrl}?${params.toString()}`;
-    }
-
-    async function copyClientLink() {
-      const link = getClientDirectUrl();
-      try {
-        await navigator.clipboard.writeText(link);
-        setStatus('Client video link copied!', 'success');
-      } catch {
-        prompt('انسخ لينك العميل المباشر:', link);
-      }
-    }
-
-    window.addEventListener('DOMContentLoaded', async () => {
+    window.addEventListener("DOMContentLoaded", async () => {
       shaka.polyfill.installAll();
 
       const params = new URLSearchParams(window.location.search);
-      const isClientMode = params.get('client') === '1' || params.get('embed') === '1';
-      const urlMpd = params.get('mpd');
-      const urlKeys = params.get('keys');
+      const mpdUrl = (params.get("mpd") || DEFAULT_MPD).trim();
+      const keysRaw = (params.get("keys") || DEFAULT_KEYS).trim();
 
-      if (isClientMode) {
-        document.body.classList.add('client-mode');
-        if (urlMpd) document.getElementById('mpdUrl').value = urlMpd;
-        if (urlKeys) {
-          document.getElementById('kidsInput').value = urlKeys;
-          document.getElementById('keysInput').value = '';
-        }
-        await initAndPlay(true);
-        return;
-      }
+      const video = document.getElementById("video");
+      const player = new shaka.Player();
+      await player.attach(video);
 
-      // وضع الاختبار العادي: تحميل القيم المحفوظة إن وجدت
-      if (localStorage.getItem('custom_mpd')) document.getElementById('mpdUrl').value = localStorage.getItem('custom_mpd');
-      if (localStorage.getItem('custom_kids')) document.getElementById('kidsInput').value = localStorage.getItem('custom_kids');
-      if (localStorage.getItem('custom_keys')) document.getElementById('keysInput').value = localStorage.getItem('custom_keys');
-    });
-
-    function setStatus(msg, type = '') {
-      const statusEl = document.getElementById('status');
-      statusEl.textContent = msg;
-      statusEl.className = 'status-box ' + (type ? 'status-' + type : '');
-    }
-
-    function clearFields() {
-      document.getElementById('mpdUrl').value = '';
-      document.getElementById('kidsInput').value = '';
-      document.getElementById('keysInput').value = '';
-      localStorage.removeItem('custom_mpd');
-      localStorage.removeItem('custom_kids');
-      localStorage.removeItem('custom_keys');
-      setStatus('Cleared.');
-    }
-
-    async function initAndPlay(silentMode = false) {
-      const mpdUrl = document.getElementById('mpdUrl').value.trim();
-      const kidsRaw = document.getElementById('kidsInput').value.trim();
-      const keysRaw = document.getElementById('keysInput').value.trim();
-
-      if (!mpdUrl) {
-        if (!silentMode) setStatus('Error: Please enter an MPD URL.', 'error');
-        return;
-      }
-
-      if (!silentMode) {
-        localStorage.setItem('custom_mpd', mpdUrl);
-        localStorage.setItem('custom_kids', kidsRaw);
-        localStorage.setItem('custom_keys', keysRaw);
-      }
-
-      const video = document.getElementById('video');
-      const container = document.querySelector('[data-shaka-player-container]');
-
-      if (!player) {
-        player = new shaka.Player();
-        await player.attach(video);
-        ui = new shaka.ui.Overlay(player, container, video);
-        player.addEventListener('error', (e) => {
-          if (!silentMode) {
-            setStatus(`Player Error (${e.detail.code}): ${e.detail.message || 'Check console/CORS'}`, 'error');
-          }
+      const clearKeys = parseKeys(keysRaw);
+      if (Object.keys(clearKeys).length > 0) {
+        player.configure({
+          drm: { clearKeys }
         });
       }
 
-      const clearKeysMap = buildClearKeysMap(kidsRaw, keysRaw);
-
-      player.configure({
-        drm: {
-          clearKeys: clearKeysMap
-        }
-      });
-
-      if (!silentMode) setStatus('Loading stream...');
       try {
         await player.load(mpdUrl);
-        if (!silentMode) setStatus('Stream loaded successfully!', 'success');
         video.play().catch(() => {});
-      } catch (error) {
-        if (!silentMode) {
-          setStatus(`Load Failed (Code ${error.code}): Verify MPD URL, Keys, or CORS policy.`, 'error');
-        }
+      } catch (e) {
+        console.error("Playback error:", e);
       }
-    }
+    });
   </script>
 </body>
 </html>
