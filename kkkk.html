@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MPD & ClearKey Player</title>
+  <!-- مكتبة Shaka Player لتشغيل DASH و ClearKey -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.11.2/shaka-player.ui.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.11.2/controls.min.css">
   <style>
@@ -131,6 +132,7 @@
     .status-error { border-left-color: #ff2a2a; color: #ff6b6b; }
     .status-success { border-left-color: #2ecc71; color: #2ecc71; }
 
+    /* وضع العميل: الفيديو فقط بملء الشاشة */
     body.client-mode {
       padding: 0;
       background: #000;
@@ -175,19 +177,21 @@
   </div>
 
   <div class="container">
+    <!-- شاشة العرض -->
     <div class="player-wrapper" data-shaka-player-container>
       <video id="video" data-shaka-player autoplay playsinline controls></video>
     </div>
 
+    <!-- لوحة الإدخال مع البيانات الجديدة -->
     <div class="controls-panel">
       <div>
         <label>MPD URL</label>
-        <input type="text" id="mpdUrl" value="https://playlists.play.yango.tech/vod/vh-ottmn-converted/vod-content/d71b3ed9690d4b26aec7d634799ca708/21956721x1794480362xd5764eba-e97f-4c4d-9fc3-827e709869e3/kaltura/dash_clear_sdr_hd_avc_aac_0e0e06da757cff33d29bd2462a5a7612/x/ysign1=a6e1c293634c0643cbfc83784a55b170c3cb43a7f5894f842272cd839667c60a,abcID=45119,bstrat=mena_v1_strat,from=yango-movies-web,pfx,prpo=900,sfx,ts=6b040a11/manifest.mpd?ottsessionid=e2652e82ae6548098de0f85479f27f78&vsid=b0a09f64fe0a738a51c991ff0f2c2be327dc598254d8xFLMx6690x1795254026&vpuid=qxeavoja6g&source_index=1&mburl=1&subs=1&deranged=1&t=1795254030749&selected_id=vid0">
+        <input type="text" id="mpdUrl" value="https://playlists.play.yango.tech/vod/vh-ottmn-converted/vod-content/cc0c1640c8c748078e2f7224923570cc/15157110x1729884322xf68e5890-8806-45e8-a79e-cad84bf5b253/kaltura/dash_drm_sdr_hd_avc_aac_1e9d3ef60b4cad2430418ab4882949e7/x/ysign1=c86c518ae79bf602bb14761538e6cf9dbeb512d78c92e43a83eb0a9b92551dd5,abcID=45119,bstrat=mena_v1_strat,from=yango-movies-web,pfx,prpo=900,sfx,ts=6b040ffc/manifest.mpd?ottsessionid=4d41577ce84f4ff2ade3944d6affaac1&vsid=308cf35778eb3074996e8347867775a85fdaca4fc29exFLMx6690x1795255547&vpuid=qxeavoja6g&source_index=1&mburl=1&subs=1&deranged=1&force_protection=pr&t=1795255548735#t=20">
       </div>
 
       <div>
         <label>KIDs (separated by new lines) or KID:KEY</label>
-        <textarea id="kidsInput"></textarea>
+        <textarea id="kidsInput">019326fbdee683d5e4b6af1873820003:c9b76419172104633aaa4c6e2407eb02</textarea>
       </div>
 
       <div>
