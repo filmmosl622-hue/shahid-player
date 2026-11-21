@@ -1,39 +1,94 @@
-const mpdUrl = "https://playlists.play.yango.tech/vod/vh-ottmn-converted/vod-content/f0b39b5d0dc04f35a2c20112f3eeca00/MWx1795010897x6094062889886833286xdfc07b3d-21e4-3927-befa-3e5311e0c34f/kaltura/dash_drm_sdr_hd_avc_aac_b98956bb4f840f9cfe642fdbdf79d649/x/ysign1=c2ee53cfaa8de57bd089b1b39bd27ac748a43eaf726dac7b411fffa4b0c390ab,abcID=45119,bstrat=mena_v1_strat,from=yango-movies-web,pfx,prpo=900,sfx,ts=6b0417b2/manifest.mpd?ottsessionid=727d40a69ade4db791b628e3abd2a9dc&vsid=71302f28473bf41ea5395553899621256c2d1abf2b18xFLMx6690x1795257522&vpuid=qxeavoja6g&source_index=1&mburl=1&subs=1&deranged=1&force_protection=pr&t=1795257523156#t=0";
-
-const clearKeys = {
-  "05329e8817c48f34ebb24e24dcd10003": "cca186285d52f718685d25d4154e672a"
-};
-
-async function startDashPlayer(videoElementId = "video") {
-  shaka.polyfill.installAll();
-
-  if (!shaka.Player.isBrowserSupported()) {
-    console.error("Browser does not support Shaka Player.");
-    return;
-  }
-
-  const video = document.getElementById(videoElementId);
-  const player = new shaka.Player();
-  await player.attach(video);
-
-  player.configure({
-    drm: {
-      clearKeys: clearKeys
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DASH Player</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.11.2/shaka-player.compiled.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #000;
+      overflow: hidden;
+      font-family: Tahoma, sans-serif;
     }
-  });
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000;
+      display: block;
+    }
+    #errMsg {
+      position: fixed;
+      bottom: 12px;
+      left: 12px;
+      right: 12px;
+      background: rgba(20, 20, 20, 0.92);
+      color: #ff6b6b;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      direction: ltr;
+      text-align: left;
+      display: none;
+    }
+  </style>
+</head>
+<body>
 
-  player.addEventListener("error", (event) => {
-    console.error("Shaka Player Error:", event.detail);
-  });
+  <video id="video" controls autoplay playsinline></video>
+  <div id="errMsg"></div>
 
-  try {
-    await player.load(mpdUrl);
-    await video.play().catch(() => {});
-  } catch (err) {
-    console.error("Load failed:", err);
-  }
-}
+  <script>
+    const mpdUrl = "https://playlists.play.yango.tech/vod/vh-ottmn-converted/vod-content/f0b39b5d0dc04f35a2c20112f3eeca00/MWx1795010897x6094062889886833286xdfc07b3d-21e4-3927-befa-3e5311e0c34f/kaltura/dash_drm_sdr_hd_avc_aac_b98956bb4f840f9cfe642fdbdf79d649/x/ysign1=c2ee53cfaa8de57bd089b1b39bd27ac748a43eaf726dac7b411fffa4b0c390ab,abcID=45119,bstrat=mena_v1_strat,from=yango-movies-web,pfx,prpo=900,sfx,ts=6b0417b2/manifest.mpd?ottsessionid=727d40a69ade4db791b628e3abd2a9dc&vsid=71302f28473bf41ea5395553899621256c2d1abf2b18xFLMx6690x1795257522&vpuid=qxeavoja6g&source_index=1&mburl=1&subs=1&deranged=1&force_protection=pr&t=1795257523156#t=0";
 
-document.addEventListener("DOMContentLoaded", () => {
-  startDashPlayer("video");
-});
+    const clearKeys = {
+      "05329e8817c48f34ebb24e24dcd10003": "cca186285d52f718685d25d4154e672a"
+    };
+
+    function showErr(text) {
+      const el = document.getElementById("errMsg");
+      el.textContent = text;
+      el.style.display = "block";
+    }
+
+    async function startDashPlayer(videoElementId = "video") {
+      shaka.polyfill.installAll();
+
+      if (!shaka.Player.isBrowserSupported()) {
+        showErr("Browser does not support Shaka Player.");
+        return;
+      }
+
+      const video = document.getElementById(videoElementId);
+      const player = new shaka.Player();
+      await player.attach(video);
+
+      player.configure({
+        drm: {
+          clearKeys: clearKeys
+        }
+      });
+
+      player.addEventListener("error", (event) => {
+        const detail = event.detail || {};
+        showErr(`Player Error (${detail.code || "ERR"}): ${detail.message || "Check DRM / Session / CORS"}`);
+      });
+
+      try {
+        await player.load(mpdUrl);
+        await video.play().catch(() => {});
+      } catch (err) {
+        showErr(`Load Failed (${err.code || "ERR"}): Session token, PlayReady DRM, or CORS blocked playback.`);
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      startDashPlayer("video");
+    });
+  </script>
+</body>
+</html>
