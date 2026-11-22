@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>مشغّل DASH ClearKey</title>
+  <title>مشغّل DASH</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.min.js"></script>
   <style>
     body {
@@ -38,12 +38,11 @@
   </div>
 
   <script>
-    const DEFAULT_MPD = "https://playlists.play.yango.tech/vod/vh-ottmn-converted/vod-content/f0b39b5d0dc04f35a2c20112f3eeca00/MWx1795010897x6094062889886833286xdfc07b3d-21e4-3927-befa-3e5311e0c34f/kaltura/dash_drm_sdr_hd_avc_aac_b98956bb4f840f9cfe642fdbdf79d649/x/ysign1=79870e468ea919413fa9eadb1e45c7fc555823cc4c491afdf21073ca69845165,abcID=45119,bstrat=mena_v1_strat,from=yango-movies-web,pfx,prpo=900,sfx,ts=6b05968f/manifest.mpd?ottsessionid=ddb855edc1f3460ab03470693b4620bd&vsid=77e6255e5c8635cd0cc50edcb66a813332c8d82b4263xFLMx6690x1795355535&vpuid=qxeavoja6g&source_index=1&mburl=1&subs=1&deranged=1&force_protection=pr&t=1795355536429#t=0";
-    const DEFAULT_KEYS = "05329e8817c48f34ebb24e24dcd10003:cca186285d52f718685d25d4154e672a";
+    const DEFAULT_MPD = "https://playlists.play.yango.tech/vod/vh-ottmn-converted/vod-content/d71b3ed9690d4b26aec7d634799ca708/21956721x1794480362xd5764eba-e97f-4c4d-9fc3-827e709869e3/kaltura/dash_clear_sdr_hd_avc_aac_0e0e06da757cff33d29bd2462a5a7612/x/ysign1=022895c08d73c0c185667ac277e01627580c425e7654c4ea719b131a0e1880f5,abcID=45119,bstrat=mena_v1_strat,from=yango-movies-web,pfx,prpo=900,sfx,ts=6b059a2d/manifest.mpd?ottsessionid=9616b0ea68824743889a176073197319&vsid=9a74face70bb1bdc6c34a4b8b48ec90df9dbb555f888xFLMx6690x1795356461&vpuid=qxeavoja6g&source_index=1&mburl=1&subs=1&deranged=1&t=1795356462325&selected_id=vid1";
 
     const params = new URLSearchParams(location.search);
     const mpd = params.get("mpd") || DEFAULT_MPD;
-    const rawKeys = params.get("keys") || DEFAULT_KEYS;
+    const rawKeys = params.get("keys") || "";
 
     const clearKeys = {};
     for (const pair of rawKeys.split(",")) {
@@ -69,20 +68,22 @@
       const player = new shaka.Player();
       await player.attach(video);
 
+      if (Object.keys(clearKeys).length > 0) {
+        player.configure({
+          drm: { clearKeys }
+        });
+      }
+
       player.addEventListener("error", (event) => {
         const err = event.detail;
-        setStatus(`تعذر التشغيل (رمز الخطأ: ${err.code || "غير معروف"}). غالباً بسبب انتهاء صلاحية الرابط أو قيود CORS/Referer.`);
-      });
-
-      player.configure({
-        drm: { clearKeys }
+        setStatus(`تعذر التشغيل (رمز الخطأ: ${err.code || "غير معروف"}).`);
       });
 
       try {
         await player.load(mpd);
         setStatus("تم تحميل البث بنجاح.");
       } catch (err) {
-        setStatus(`فشل تحميل البث: ${err.message || err.code || "خطأ في الشبكة أو التشفير"}`);
+        setStatus(`فشل تحميل البث (رمز الخطأ: ${err.code || "غير معروف"}).`);
       }
     }
 
