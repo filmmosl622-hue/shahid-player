@@ -1,94 +1,92 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DASH Player</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.11.2/shaka-player.compiled.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>مشغّل DASH ClearKey</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.min.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body {
-      width: 100%;
-      height: 100%;
-      background: #000;
-      overflow: hidden;
-      font-family: Tahoma, sans-serif;
+    body {
+      margin: 0;
+      background: #111;
+      color: #fff;
+      font-family: system-ui, -apple-system, sans-serif;
+      display: grid;
+      place-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      width: 92%;
+      max-width: 960px;
     }
     video {
       width: 100%;
-      height: 100%;
-      object-fit: contain;
       background: #000;
-      display: block;
+      border-radius: 8px;
     }
-    #errMsg {
-      position: fixed;
-      bottom: 12px;
-      left: 12px;
-      right: 12px;
-      background: rgba(20, 20, 20, 0.92);
-      color: #ff6b6b;
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-size: 12px;
-      direction: ltr;
-      text-align: left;
-      display: none;
+    #status {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #ccc;
     }
   </style>
 </head>
 <body>
-
-  <video id="video" controls autoplay playsinline></video>
-  <div id="errMsg"></div>
+  <div class="container">
+    <video id="video" controls autoplay></video>
+    <div id="status">جاري تحميل البث...</div>
+  </div>
 
   <script>
-    const mpdUrl = "https://playlists.play.yango.tech/vod/vh-ottmn-converted/vod-content/f0b39b5d0dc04f35a2c20112f3eeca00/MWx1795010897x6094062889886833286xdfc07b3d-21e4-3927-befa-3e5311e0c34f/kaltura/dash_drm_sdr_hd_avc_aac_b98956bb4f840f9cfe642fdbdf79d649/x/ysign1=c2ee53cfaa8de57bd089b1b39bd27ac748a43eaf726dac7b411fffa4b0c390ab,abcID=45119,bstrat=mena_v1_strat,from=yango-movies-web,pfx,prpo=900,sfx,ts=6b0417b2/manifest.mpd?ottsessionid=727d40a69ade4db791b628e3abd2a9dc&vsid=71302f28473bf41ea5395553899621256c2d1abf2b18xFLMx6690x1795257522&vpuid=qxeavoja6g&source_index=1&mburl=1&subs=1&deranged=1&force_protection=pr&t=1795257523156#t=0";
+    const DEFAULT_MPD = "https://playlists.play.yango.tech/vod/vh-ottmn-converted/vod-content/f0b39b5d0dc04f35a2c20112f3eeca00/MWx1795010897x6094062889886833286xdfc07b3d-21e4-3927-befa-3e5311e0c34f/kaltura/dash_drm_sdr_hd_avc_aac_b98956bb4f840f9cfe642fdbdf79d649/x/ysign1=79870e468ea919413fa9eadb1e45c7fc555823cc4c491afdf21073ca69845165,abcID=45119,bstrat=mena_v1_strat,from=yango-movies-web,pfx,prpo=900,sfx,ts=6b05968f/manifest.mpd?ottsessionid=ddb855edc1f3460ab03470693b4620bd&vsid=77e6255e5c8635cd0cc50edcb66a813332c8d82b4263xFLMx6690x1795355535&vpuid=qxeavoja6g&source_index=1&mburl=1&subs=1&deranged=1&force_protection=pr&t=1795355536429#t=0";
+    const DEFAULT_KEYS = "05329e8817c48f34ebb24e24dcd10003:cca186285d52f718685d25d4154e672a";
 
-    const clearKeys = {
-      "05329e8817c48f34ebb24e24dcd10003": "cca186285d52f718685d25d4154e672a"
-    };
+    const params = new URLSearchParams(location.search);
+    const mpd = params.get("mpd") || DEFAULT_MPD;
+    const rawKeys = params.get("keys") || DEFAULT_KEYS;
 
-    function showErr(text) {
-      const el = document.getElementById("errMsg");
-      el.textContent = text;
-      el.style.display = "block";
+    const clearKeys = {};
+    for (const pair of rawKeys.split(",")) {
+      const [kid, key] = pair.trim().split(":");
+      if (kid && key) {
+        clearKeys[kid.trim()] = key.trim();
+      }
     }
 
-    async function startDashPlayer(videoElementId = "video") {
+    function setStatus(msg) {
+      document.getElementById("status").textContent = msg;
+    }
+
+    async function init() {
       shaka.polyfill.installAll();
 
       if (!shaka.Player.isBrowserSupported()) {
-        showErr("Browser does not support Shaka Player.");
+        setStatus("المتصفح الحالي لا يدعم Shaka Player.");
         return;
       }
 
-      const video = document.getElementById(videoElementId);
+      const video = document.getElementById("video");
       const player = new shaka.Player();
       await player.attach(video);
 
-      player.configure({
-        drm: {
-          clearKeys: clearKeys
-        }
+      player.addEventListener("error", (event) => {
+        const err = event.detail;
+        setStatus(`تعذر التشغيل (رمز الخطأ: ${err.code || "غير معروف"}). غالباً بسبب انتهاء صلاحية الرابط أو قيود CORS/Referer.`);
       });
 
-      player.addEventListener("error", (event) => {
-        const detail = event.detail || {};
-        showErr(`Player Error (${detail.code || "ERR"}): ${detail.message || "Check DRM / Session / CORS"}`);
+      player.configure({
+        drm: { clearKeys }
       });
 
       try {
-        await player.load(mpdUrl);
-        await video.play().catch(() => {});
+        await player.load(mpd);
+        setStatus("تم تحميل البث بنجاح.");
       } catch (err) {
-        showErr(`Load Failed (${err.code || "ERR"}): Session token, PlayReady DRM, or CORS blocked playback.`);
+        setStatus(`فشل تحميل البث: ${err.message || err.code || "خطأ في الشبكة أو التشفير"}`);
       }
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
-      startDashPlayer("video");
-    });
+    document.addEventListener("DOMContentLoaded", init);
   </script>
 </body>
 </html>
