@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MPD & ClearKey Player</title>
+  <title>MPD & ClearKey Player — Starzplay</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.11.2/shaka-player.ui.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.11.2/controls.min.css">
   <style>
@@ -183,12 +183,12 @@
     <div class="controls-panel">
       <div>
         <label>MPD URL</label>
-        <input type="text" id="mpdUrl" value="https://playlists.play.yango.tech/vod/vh-ottmn-converted/vod-content/f0b39b5d0dc04f35a2c20112f3eeca00/MWx1795010897x6094062889886833286xdfc07b3d-21e4-3927-befa-3e5311e0c34f/kaltura/dash_drm_sdr_hd_avc_aac_b98956bb4f840f9cfe642fdbdf79d649/x/ysign1=81a71f9e146d5dadc35cdc38353687f67fbc31b5c78aa052ca4ca9c52e7f5c52,abcID=45119,bstrat=mena_v1_strat,from=yango-movies-web,pfx,prpo=900,sfx,ts=6b061600/manifest.mpd?ottsessionid=ad5730f2f580460f9acbb8732c3f0e02&vsid=0513a384e02480e4044408e1807aa4d2ba680fa3a2b0xFLMx6690x1795388159&vpuid=qxeavoja6g&source_index=1&mburl=1&subs=1&deranged=1&force_protection=pr&t=1795388160172#t=0">
+        <input type="text" id="mpdUrl" value="https://admn-jit-cdn-lb.starzplayarabia.com/out/v1/2bc48da3af6c479aba96a5992b3ef743/17f85724146c4604beb0d4ad57ce6c1a/ea03fe14c49f41418ce8adf9a62c489c/index.mpd">
       </div>
 
       <div>
         <label>KIDs (separated by new lines) or KID:KEY</label>
-        <textarea id="kidsInput">05329e8817c48f34ebb24e24dcd10003:cca186285d52f718685d25d4154e672a</textarea>
+        <textarea id="kidsInput">83b0676d5e0491d1437c8ed36bde0f53:74cca6c9c6188b5b0e570ff04e176da0</textarea>
       </div>
 
       <div>
@@ -214,8 +214,8 @@
     const STREAM_HEADERS = {
       "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:160.0) Gecko/20100101 Firefox/160.0",
       "Accept": "*/*",
-      "Referer": "https://play.yango.com/",
-      "Origin": "https://play.yango.com"
+      "Origin": "https://starzplay.com",
+      "Referer": "https://starzplay.com/"
     };
 
     function buildClearKeysMap(kidsRaw, keysRaw) {
