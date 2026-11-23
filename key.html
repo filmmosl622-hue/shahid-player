@@ -55,6 +55,9 @@
   </div>
 
   <script>
+    const DEFAULT_MPD = "https://mbc-aws-ksa.mncdn.com/vod/aws/3060004241-STXML/cbd84042023a437fbd6d18dd093402ec/7c201da305b543e0ae55a3673f9aa3a5/840aa317c6f34c8fb0ef18117f07c496/index.mpd";
+    const DEFAULT_KEYS = "990663bead8f4e4cb63e724703af8d44:145a0823f144005555106ba54d89fd16";
+
     function showError(msg) {
       const box = document.getElementById("error-box");
       box.style.display = "block";
@@ -65,7 +68,6 @@
       const clearKeys = {};
       if (!keysParam) return clearKeys;
 
-      // يدعم مفتاح واحد أو عدة مفاتيح مفصولة بفاصلة أو مسافة أو سطر جديد
       const entries = keysParam.split(/[\s,]+/).filter(Boolean);
       for (const entry of entries) {
         const parts = entry.split(":");
@@ -89,10 +91,8 @@
       }
 
       const params = new URLSearchParams(window.location.search);
-
-      // يقرأ mpd من الرابط، ولو مش موجود يقدر يرجع لرابط افتراضي لو حبيت
-      const manifestUri = params.get("mpd") || "";
-      const keysParam = params.get("keys") || "";
+      const manifestUri = params.get("mpd") || DEFAULT_MPD;
+      const keysParam = params.get("keys") || DEFAULT_KEYS;
       const clearKeys = parseKeysParam(keysParam);
 
       if (!manifestUri) {
