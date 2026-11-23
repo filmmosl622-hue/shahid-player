@@ -46,22 +46,42 @@
       text-align: left;
       word-break: break-all;
     }
+    #retry-btn {
+      margin-top: 10px;
+      padding: 6px 14px;
+      background: #e11d48;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+    }
   </style>
 </head>
 <body>
   <div class="player-container">
     <video id="video" controls autoplay playsinline></video>
-    <div id="error-box"></div>
+    <div id="error-box">
+      <div id="error-text"></div>
+      <button id="retry-btn" onclick="location.reload()">إعادة المحاولة</button>
+    </div>
   </div>
 
   <script>
     const DEFAULT_MPD = "https://mbc-aws-ksa.mncdn.com/vod/aws/3060004241-STXML/cbd84042023a437fbd6d18dd093402ec/7c201da305b543e0ae55a3673f9aa3a5/840aa317c6f34c8fb0ef18117f07c496/index.mpd";
     const DEFAULT_KEYS = "990663bead8f4e4cb63e724703af8d44:145a0823f144005555106ba54d89fd16";
 
+    let playerInstance = null;
+
     function showError(msg) {
       const box = document.getElementById("error-box");
+      const text = document.getElementById("error-text");
       box.style.display = "block";
-      box.textContent = msg;
+      text.textContent = msg;
+    }
+
+    function hideError() {
+      document.getElementById("error-box").style.display = "none";
     }
 
     function parseKeysParam(keysParam) {
@@ -83,6 +103,7 @@
     }
 
     async function initPlayer() {
+      hideError();
       shaka.polyfill.installAll();
 
       if (!shaka.Player.isBrowserSupported()) {
@@ -101,24 +122,38 @@
       }
 
       const video = document.getElementById("video");
-      const player = new shaka.Player();
-      await player.attach(video);
+      if (!playerInstance) {
+        playerInstance = new shaka.Player();
+        await playerInstance.attach(video);
 
-      if (Object.keys(clearKeys).length > 0) {
-        player.configure({
-          drm: {
-            clearKeys: clearKeys
-          }
+        playerInstance.addEventListener("error", (event) => {
+          const err = event.detail;
+          showError(`Error code: ${err.code} | Category: ${err.category} | ${err.message || ""}`);
         });
       }
 
-      player.addEventListener("error", (event) => {
-        const err = event.detail;
-        showError(`Error code: ${err.code} | Category: ${err.category} | ${err.message || ""}`);
-      });
+      const config = {
+        streaming: {
+          retryParameters: {
+            timeout: 15000,
+            maxAttempts: 4,
+            baseDelay: 1000,
+            backoffFactor: 1.5,
+            fuzzFactor: 0.5
+          }
+        }
+      };
+
+      if (Object.keys(clearKeys).length > 0) {
+        config.drm = {
+          clearKeys: clearKeys
+        };
+      }
+
+      playerInstance.configure(config);
 
       try {
-        await player.load(manifestUri);
+        await playerInstance.load(manifestUri);
       } catch (e) {
         showError(`Load error: ${e.code || ""} ${e.message || e}`);
       }
