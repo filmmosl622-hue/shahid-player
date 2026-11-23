@@ -1,302 +1,130 @@
-z<!DOCTYPE html>
-<!-- HTML : APP24/MOB -->
-<html lang="ar">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Star Cinema</title>
-<!-- تم دمج الخطوط في طلب واحد وإزالة مكتبات الأيقونات غير المستخدمة لتسريع الرندر -->
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500&family=Roboto:wght@300&family=Readex+Pro:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-<style type="text/css">
-body {
-padding:0;
-margin:0;
-user-select:none;
-list-style:none;
-background:#fff;
-font-family: 'Readex Pro', sans-serif;
-}
-header {
-background:#26ab56;
-padding:0 15px;
-color:#fff;
-margin-bottom:10px;
-position:fixed;
-top:0;
-height:60px;
-width:100%;
-box-shadow: 0px 0px 7px black;
-z-index:10;
-display: flex;
-align-items: center;
-justify-content: space-between;
-box-sizing: border-box;
-}
-h3 {
-text-align:right;
-font-size:medium;
-font-weight:200;
-margin:0;
-color: #fff;
-}
-/* تنسيق زر الريلود العلوي */
-.reload-btn {
-background: rgba(255, 255, 255, 0.2);
-border: none;
-color: #fff;
-padding: 6px 10px;
-border-radius: 6px;
-cursor: pointer;
-font-size: 13px;
-display: flex;
-align-items: center;
-gap: 5px;
-font-family: 'Readex Pro', sans-serif;
-}
-.reload-btn:active {
-background: rgba(0, 0, 0, 0.3);
-}
-#page:hover {
-background:none;
-}
-#page {
-margin-top:75px;
-width:98%;
-padding-right:4px;
-padding-left:2px;
-}
-#page a:hover {
-background:#111;
-}
-#page a {
-width:110px;
-border:2px solid #2ecb66;
-height:120px;
-display:inline-block;
-border-radius:8px;
-margin-bottom:10px;
-text-decoration:none;
-position: relative;
-overflow: hidden;
-}
-#page a img {
-height:120px;
-margin-right:0px;
-width:100%;
-border-radius:8px;
-}
-#page a .episode-title {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: rgba(128, 0, 0);
-    color: #fff;
-    font-size: 13px;
-    font-weight: 600;
-    text-align: center;
-    padding: 4px 0;
-    margin: 0;
-}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>مشغل الفيديو - Dynamic ClearKey</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.11.7/shaka-player.compiled.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background: #0b0f17;
+      color: #ffffff;
+      font-family: Tahoma, Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+    .player-container {
+      width: 100%;
+      max-width: 900px;
+      background: #000;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.65);
+    }
+    video {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      display: block;
+      background: #000;
+    }
+    #error-box {
+      display: none;
+      padding: 12px 16px;
+      background: #2a0d12;
+      color: #ff9aa2;
+      font-size: 14px;
+      direction: ltr;
+      text-align: left;
+      word-break: break-all;
+    }
+  </style>
 </head>
-<!-- BY MoCreators -->
-<body dir="rtl">
-<header>
-    <h3>Star Cinema</h3>
-    <!-- زر الريلود (إعادة تحميل الصفحة) -->
-    <button class="reload-btn" onclick="location.reload();">
-        <i class="fa fa-refresh"></i> تحديث
-    </button>
-</header>
-<!-- BY MoCreators -->
-<div id="page">
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 90</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 89</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 88</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 87</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 86</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 85</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 84</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 83</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 82</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 81</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 80</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 79</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 78</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 77</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 76</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 75</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 74</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 73</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 72</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 71</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 70</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 69</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 68</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 67</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 66</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 65</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 64</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 63</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 62</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 61</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 60</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 59</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 58</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 57</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 56</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 55</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 54</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 53</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 52</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 51</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 50</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 49</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 48</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 47</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 46</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 45</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 44</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 43</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 42</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 41</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 40</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 39</div></a> -->
- <!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 38</div></a> -->
-<!-- <a href="" onclick="window.location.href=this.href; return false;"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 37</div></a> -->
-    <a href="https://filmmosl622-hue.github.io/shahid-player/key.html?client=1&mpd=https://orng.shahid.net/out/v1/cfb6dbe4ea8c46679e0370997e50551e/226eaf4a243f4bfb9ebb0bec3ac58d43/f93a7f08a52a4bab90cd98ed665b3f52/index.mpd&keys=3548e6ea7e5048fe9566049f96274a45:a64fb0b7a631ffb66b305a83083796e3"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 36</div></a>
-<a href="https://filmmosl622-hue.github.io/shahid-player/key.html?client=1&mpd=https://orng.shahid.net/out/v1/c0dec4a696d941ad99e43fcb4ba96951/226eaf4a243f4bfb9ebb0bec3ac58d43/f93a7f08a52a4bab90cd98ed665b3f52/index.mpd&keys=3624ff9e22f549cc85507348e7dd9ab4:6fa156a188731c2e214172ac635d88ec"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 35</div></a>
+<body>
+  <div class="player-container">
+    <video id="video" controls autoplay playsinline></video>
+    <div id="error-box"></div>
+  </div>
 
+  <script>
+    function showError(msg) {
+      const box = document.getElementById("error-box");
+      box.style.display = "block";
+      box.textContent = msg;
+    }
 
-<a href="https://filmmosl622-hue.github.io/shahid-player/key.html?client=1&mpd=https://orng.shahid.net/out/v1/9e4bf6e770b6427aa8e8f868432ce037/226eaf4a243f4bfb9ebb0bec3ac58d43/f93a7f08a52a4bab90cd98ed665b3f52/index.mpd&keys=a1387c2aebef4214a5811b3bab8cfe53:30fb27b58f90494bd76008cc02954eda"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 34</div></a>
-    
+    function parseKeysParam(keysParam) {
+      const clearKeys = {};
+      if (!keysParam) return clearKeys;
 
-<a href="https://seed132.bitchute.com/Q3NslhDSYGTr/0P95Ct5wD5es.mp4">
-    <img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120">
-    <div class="episode-title">الحلقة 33</div>
-</a>
-    
+      // يدعم مفتاح واحد أو عدة مفاتيح مفصولة بفاصلة أو مسافة أو سطر جديد
+      const entries = keysParam.split(/[\s,]+/).filter(Boolean);
+      for (const entry of entries) {
+        const parts = entry.split(":");
+        if (parts.length === 2) {
+          const kid = parts[0].trim();
+          const key = parts[1].trim();
+          if (kid && key) {
+            clearKeys[kid] = key;
+          }
+        }
+      }
+      return clearKeys;
+    }
 
-     
-<a href="https://seed132.bitchute.com/Q3NslhDSYGTr/ro1ca2qan4ew.mp4">
-    <img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120">
-    <div class="episode-title">الحلقة 32</div>
-</a>
+    async function initPlayer() {
+      shaka.polyfill.installAll();
 
-<a href="https://seed171.bitchute.com/Q3NslhDSYGTr/dK58bVF0t2dF.mp4">
-    <img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120">
-    <div class="episode-title">الحلقة 31</div>
-</a>
+      if (!shaka.Player.isBrowserSupported()) {
+        showError("Browser does not support Shaka Player / DRM.");
+        return;
+      }
 
-<a href="go:hos30"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 30</div></a>
-<a href="go:hos29"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 29</div></a>
-<a href="go:hos28"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 28</div></a>
-<a href="go:hos27"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 27</div></a>
-<a href="go:hos26"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 26</div></a>
-<a href="go:hos25"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 25</div></a>
-<a href="go:hos24"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 24</div></a>
-<a href="go:hos23"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 23</div></a>
-<a href="go:hos22"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 22</div></a>
-<a href="go:hos21"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 21</div></a>
-<a href="go:hos20"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 20</div></a>
-<a href="go:hos19"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 19</div></a>
-<a href="go:hos18"><img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 18</div></a>
+      const params = new URLSearchParams(window.location.search);
 
-<a href="go:hos17">
-    <img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120">
-    <div class="episode-title">الحلقة 17</div>
-</a>
+      // يقرأ mpd من الرابط، ولو مش موجود يقدر يرجع لرابط افتراضي لو حبيت
+      const manifestUri = params.get("mpd") || "";
+      const keysParam = params.get("keys") || "";
+      const clearKeys = parseKeysParam(keysParam);
 
-<a href="go:hos16">
-    <img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120">
-    <div class="episode-title">الحلقة 16</div>
-</a>
+      if (!manifestUri) {
+        showError("Missing ?mpd= parameter in URL.");
+        return;
+      }
 
-<a href="go:hos15">
-    <img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120">
-    <div class="episode-title">الحلقة 15</div>
-</a>
+      const video = document.getElementById("video");
+      const player = new shaka.Player();
+      await player.attach(video);
 
-<a href="go:hos14">
-    <img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120">
-    <div class="episode-title">الحلقة 14</div>
-</a>
+      if (Object.keys(clearKeys).length > 0) {
+        player.configure({
+          drm: {
+            clearKeys: clearKeys
+          }
+        });
+      }
 
-<a href="go:hos13">
-    <img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120">
-    <div class="episode-title">الحلقة 13</div>
-</a>
+      player.addEventListener("error", (event) => {
+        const err = event.detail;
+        showError(`Error code: ${err.code} | Category: ${err.category} | ${err.message || ""}`);
+      });
 
-<a href="go:hos12">
-    <img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120">
-    <div class="episode-title">الحلقة 12</div>
-</a>
+      try {
+        await player.load(manifestUri);
+      } catch (e) {
+        showError(`Load error: ${e.code || ""} ${e.message || e}`);
+      }
+    }
 
-<a href="go:hos11">
-    <img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120">
-    <div class="episode-title">الحلقة 11</div>
-</a>
-
-<a href="go:hos10">
-    <img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120">
-    <div class="episode-title">الحلقة 10</div>
-</a>
-
-<a href="go:hos9">
-    <img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120">
-    <div class="episode-title">الحلقة 9</div>
-</a>
-
-<a href="go:hos8">
-    <img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120">
-    <div class="episode-title">الحلقة 8</div>
-</a>
-
-<a href="go:hos7">
-    <img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120">
-    <div class="episode-title">الحلقة 7</div>
-</a>
-
-<a href="go:hos6">
-    <img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120">
-    <div class="episode-title">الحلقة 6</div>
-</a>
-
-<a href="go:hos5">
-    <img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120">
-    <div class="episode-title">الحلقة 5</div>
-</a>
-
-<a href="go:hos4">
-    <img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120">
-    <div class="episode-title">الحلقة 4</div>
-</a>
-
-<a href="go:hos3">
-    <img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120">
-    <div class="episode-title">الحلقة 3</div>
-</a>
-
-<a href="go:hos2">
-    <img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120">
-    <div class="episode-title">الحلقة 2</div>
-</a>
-
-<a href="go:hos1">
-    <img src="https://h.top4top.io/p_3956vswv01.jpg" alt="" loading="lazy" width="110" height="120">
-    <div class="episode-title">الحلقة 1</div>
-</a>
-
-</div>
-
-<!-- كود التحديث التلقائي كل 10 ثانية (10000 ميلي ثانية) -->
-<script>
-setTimeout(function(){
-    location.reload();
-}, 10000);
-</script>
-
+    document.addEventListener("DOMContentLoaded", initPlayer);
+  </script>
 </body>
 </html>
