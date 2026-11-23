@@ -1,156 +1,79 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Player</title>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.11.2/shaka-player.compiled.js"></script>
-
-<style>
-* { box-sizing:border-box; margin:0; padding:0; }
-
-html,body {
-  width:100%;
-  height:100%;
-  background:#000;
-  overflow:hidden;
-}
-
-video {
-  width:100%;
-  height:100%;
-  object-fit:contain;
-  background:#000;
-}
-
-#start {
-  position:absolute;
-  inset:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:#000;
-  color:white;
-  font-size:18px;
-  font-family:Arial;
-  flex-direction:column;
-  gap:15px;
-  padding:20px;
-  text-align:center;
-}
-
-button {
-  padding:14px 30px;
-  background:#1685ff;
-  color:white;
-  border:0;
-  border-radius:8px;
-  font-size:17px;
-  cursor:pointer;
-}
-
-.hidden { display:none !important; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Player</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.11.2/shaka-player.compiled.js"></script>
+  <style>
+- {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #000;
+      overflow: hidden;
+    }
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000;
+      display: block;
+    }
+  </style>
 </head>
-
 <body>
 
-<video id="video" autoplay muted playsinline webkit-playsinline controls></video>
+  <video id="video" controls autoplay playsinline></video>
 
-<div id="start">
-  <span id="msg">جاري تحميل الفيديو...</span>
-  <button id="play" class="hidden">تشغيل الفيديو</button>
-</div>
+  <script>
+    const DEFAULT_MPD = "https://mbc-aws-ksa.mncdn.com/vod/aws/3060004241-STXML/cbd84042023a437fbd6d18dd093402ec/7c201da305b543e0ae55a3673f9aa3a5/840aa317c6f34c8fb0ef18117f07c496/index.mpd?";
+    const DEFAULT_KEYS = "990663bead8f4e4cb63e724703af8d44:145a0823f144005555106ba54d89fd16";
 
-<script>
-const DEFAULT_MPD =
-"https://mbcvod-enc.edgenextcdn.net/out/v1/618c571a50164bc08a2bf6b521f5fe8a/226eaf4a243f4bfb9ebb0bec3ac58d43/f93a7f08a52a4bab90cd98ed665b3f52/index.mpd?aws.manifestfilter=audio_language:en;subtitle_language:ar;video_codec:H264;video_framerate:25-25;video_height:144-1080";
-
-const DEFAULT_KEYS =
-"124cd19ce2b54876870c8b005dc0ad5b:61ed21fd63cda849039b10c1067c0223";
-
-const params = new URLSearchParams(window.location.search);
-const MPD_URL = (params.get("mpd") || DEFAULT_MPD).trim();
-const KEYS_RAW = (params.get("keys") || DEFAULT_KEYS).trim();
-
-const video = document.getElementById("video");
-const overlay = document.getElementById("start");
-const msg = document.getElementById("msg");
-const playBtn = document.getElementById("play");
-
-function parseKeys(raw) {
-  const map = {};
-  if (!raw) return map;
-  raw.split(/[\r\n,]+/).forEach(line => {
-    const clean = line.trim();
-    if (clean.includes(":")) {
-      const [kid, key] = clean.split(":");
-      if (kid && key) {
-        map[kid.trim().toLowerCase()] = key.trim().toLowerCase();
-      }
-    }
-  });
-  return map;
-}
-
-function error(text) {
-  msg.textContent = text;
-  overlay.classList.remove("hidden");
-  playBtn.classList.remove("hidden");
-}
-
-async function init() {
-  try {
-    shaka.polyfill.installAll();
-
-    if (!shaka.Player.isBrowserSupported()) {
-      error("الجهاز لا يدعم صيغة الفيديو");
-      return;
-    }
-
-    const player = new shaka.Player();
-    await player.attach(video);
-
-    const clearKeys = parseKeys(KEYS_RAW);
-    if (Object.keys(clearKeys).length > 0) {
-      player.configure({
-        drm: { clearKeys }
+    function parseKeys(raw) {
+      const map = {};
+      if (!raw) return map;
+      raw.split(/[\r\n,]+/).forEach(line => {
+        const clean = line.trim();
+        if (clean.includes(":")) {
+          const [kid, key] = clean.split(":");
+          if (kid && key) {
+            map[kid.trim().toLowerCase()] = key.trim().toLowerCase();
+          }
+        }
       });
+      return map;
     }
 
-    player.addEventListener("error", e => {
-      console.error(e.detail);
-      error("تعذر تحميل الفيديو");
+    window.addEventListener("DOMContentLoaded", async () => {
+      shaka.polyfill.installAll();
+
+      const params = new URLSearchParams(window.location.search);
+      const mpdUrl = (params.get("mpd") || DEFAULT_MPD).trim();
+      const keysRaw = (params.get("keys") || DEFAULT_KEYS).trim();
+
+      const video = document.getElementById("video");
+      const player = new shaka.Player();
+      await player.attach(video);
+
+      const clearKeys = parseKeys(keysRaw);
+      if (Object.keys(clearKeys).length > 0) {
+        player.configure({
+          drm: { clearKeys }
+        });
+      }
+
+      try {
+        await player.load(mpdUrl);
+        video.play().catch(() => {});
+      } catch (e) {
+        console.error("Playback error:", e);
+      }
     });
-
-    video.addEventListener("playing", () => {
-      overlay.classList.add("hidden");
-    });
-
-    await player.load(MPD_URL);
-
-    video.muted = true;
-    await video.play();
-
-  } catch (e) {
-    console.error(e);
-    error("اضغط تشغيل لبدء الفيديو");
-  }
-}
-
-playBtn.addEventListener("click", async () => {
-  try {
-    await video.play();
-    video.muted = false;
-    overlay.classList.add("hidden");
-  } catch(e) {
-    error("تعذر التشغيل");
-  }
-});
-
-init();
-</script>
-
+  </script>
 </body>
 </html>
