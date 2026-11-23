@@ -28,7 +28,7 @@
 </head>
 <body>
 
-  <video id="video" controls autoplay playsinline></video>
+  <video id="video" controls autoplay playsinline webkit-playsinline preload="auto"></video>
 
   <script>
     const DEFAULT_MPD = "https://mbc-aws-ksa.mncdn.com/vod/aws/3060004241-STXML/cbd84042023a437fbd6d18dd093402ec/7c201da305b543e0ae55a3673f9aa3a5/840aa317c6f34c8fb0ef18117f07c496/index.mpd?";
@@ -49,39 +49,82 @@
       return map;
     }
 
-    window.addEventListener("DOMContentLoaded", async () => {
-      shaka.polyfill.installAll();
+    async function forceAutoPlay(video) {
+      try {
+        await video.play();
+        return;
+      } catch (e) {
+        // المتصفحات الموبايل غالباً تسمح بالتشغيل التلقائي عند كتم الصوت أولاً
+        video.muted = true;
+        try {
+          await video.play();
+        } catch (err) {
+          console.warn("Autoplay blocked until user tap:", err);
+        }
+      }
+    }
 
+    async function nativeFallback(video, url) {
+      try {
+        video.src = url;
+        video.load();
+        await forceAutoPlay(video);
+      } catch (err) {
+        console.error("Native fallback failed:", err);
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", async () => {
       const params = new URLSearchParams(window.location.search);
       const mpdUrl = (params.get("mpd") || DEFAULT_MPD).trim();
       const keysRaw = (params.get("keys") || DEFAULT_KEYS).trim();
-
       const video = document.getElementById("video");
-      const player = new shaka.Player();
-      await player.attach(video);
 
-      const clearKeys = parseKeys(keysRaw);
-      if (Object.keys(clearKeys).length > 0) {
-        player.configure({
-          drm: { clearKeys }
-        });
+      // في حال لم يكن الرابط MPD (مثلاً MP4 مباشر) استخدم المشغل الأصلي مباشرة
+      if (!/\.mpd(\?|#|$)/i.test(mpdUrl)) {
+        await nativeFallback(video, mpdUrl);
+        return;
       }
 
+      if (typeof shaka !== "undefined") {
+        shaka.polyfill.installAll();
+      }
+
+      if (typeof shaka === "undefined" || !shaka.Player.isBrowserSupported()) {
+        await nativeFallback(video, mpdUrl);
+        return;
+      }
+
+      const player = new shaka.Player();
+
       try {
+        await player.attach(video);
+
+        player.configure({
+          streaming: {
+            bufferingGoal: 15,
+            rebufferingGoal: 2
+          }
+        });
+
+        const clearKeys = parseKeys(keysRaw);
+        if (Object.keys(clearKeys).length > 0) {
+          player.configure({
+            drm: { clearKeys }
+          });
+        }
+
+        player.addEventListener("error", (event) => {
+          console.error("Shaka error:", event.detail);
+        });
+
         await player.load(mpdUrl);
-        video.play().catch(() => {});
+        await forceAutoPlay(video);
       } catch (e) {
-        console.error("Playback error:", e);
+        console.error("Shaka load failed, trying native fallback:", e);
+        await nativeFallback(video, mpdUrl);
       }
     });
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
