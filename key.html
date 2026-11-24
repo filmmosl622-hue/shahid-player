@@ -1,165 +1,79 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>مشغل الفيديو - Dynamic ClearKey</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.11.7/shaka-player.compiled.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Player</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.11.2/shaka-player.compiled.js"></script>
   <style>
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
-    body {
-      background: #0b0f17;
-      color: #ffffff;
-      font-family: Tahoma, Arial, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      padding: 16px;
-    }
-    .player-container {
+    html, body {
       width: 100%;
-      max-width: 900px;
+      height: 100%;
       background: #000;
-      border-radius: 12px;
       overflow: hidden;
-      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.65);
     }
     video {
       width: 100%;
-      height: auto;
-      aspect-ratio: 16 / 9;
-      display: block;
+      height: 100%;
+      object-fit: contain;
       background: #000;
-    }
-    #error-box {
-      display: none;
-      padding: 12px 16px;
-      background: #2a0d12;
-      color: #ff9aa2;
-      font-size: 14px;
-      direction: ltr;
-      text-align: left;
-      word-break: break-all;
-    }
-    #retry-btn {
-      margin-top: 10px;
-      padding: 6px 14px;
-      background: #e11d48;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 13px;
+      display: block;
     }
   </style>
 </head>
 <body>
-  <div class="player-container">
-    <video id="video" controls autoplay playsinline></video>
-    <div id="error-box">
-      <div id="error-text"></div>
-      <button id="retry-btn" onclick="location.reload()">إعادة المحاولة</button>
-    </div>
-  </div>
+
+  <video id="video" controls autoplay playsinline></video>
 
   <script>
-    const DEFAULT_MPD = "https://mbc-aws-ksa.mncdn.com/vod/aws/3060004241-STXML/cbd84042023a437fbd6d18dd093402ec/7c201da305b543e0ae55a3673f9aa3a5/840aa317c6f34c8fb0ef18117f07c496/index.mpd";
+    const DEFAULT_MPD = "https://mbc-aws-ksa.mncdn.com/vod/aws/3060004241-STXML/cbd84042023a437fbd6d18dd093402ec/7c201da305b543e0ae55a3673f9aa3a5/840aa317c6f34c8fb0ef18117f07c496/index.mpd?";
     const DEFAULT_KEYS = "990663bead8f4e4cb63e724703af8d44:145a0823f144005555106ba54d89fd16";
 
-    let playerInstance = null;
-
-    function showError(msg) {
-      const box = document.getElementById("error-box");
-      const text = document.getElementById("error-text");
-      box.style.display = "block";
-      text.textContent = msg;
-    }
-
-    function hideError() {
-      document.getElementById("error-box").style.display = "none";
-    }
-
-    function parseKeysParam(keysParam) {
-      const clearKeys = {};
-      if (!keysParam) return clearKeys;
-
-      const entries = keysParam.split(/[\s,]+/).filter(Boolean);
-      for (const entry of entries) {
-        const parts = entry.split(":");
-        if (parts.length === 2) {
-          const kid = parts[0].trim();
-          const key = parts[1].trim();
+    function parseKeys(raw) {
+      const map = {};
+      if (!raw) return map;
+      raw.split(/[\r\n,]+/).forEach(line => {
+        const clean = line.trim();
+        if (clean.includes(":")) {
+          const [kid, key] = clean.split(":");
           if (kid && key) {
-            clearKeys[kid] = key;
+            map[kid.trim().toLowerCase()] = key.trim().toLowerCase();
           }
         }
-      }
-      return clearKeys;
+      });
+      return map;
     }
 
-    async function initPlayer() {
-      hideError();
+    window.addEventListener("DOMContentLoaded", async () => {
       shaka.polyfill.installAll();
 
-      if (!shaka.Player.isBrowserSupported()) {
-        showError("Browser does not support Shaka Player / DRM.");
-        return;
-      }
-
       const params = new URLSearchParams(window.location.search);
-      const manifestUri = params.get("mpd") || DEFAULT_MPD;
-      const keysParam = params.get("keys") || DEFAULT_KEYS;
-      const clearKeys = parseKeysParam(keysParam);
-
-      if (!manifestUri) {
-        showError("Missing ?mpd= parameter in URL.");
-        return;
-      }
+      const mpdUrl = (params.get("mpd") || DEFAULT_MPD).trim();
+      const keysRaw = (params.get("keys") || DEFAULT_KEYS).trim();
 
       const video = document.getElementById("video");
-      if (!playerInstance) {
-        playerInstance = new shaka.Player();
-        await playerInstance.attach(video);
+      const player = new shaka.Player();
+      await player.attach(video);
 
-        playerInstance.addEventListener("error", (event) => {
-          const err = event.detail;
-          showError(`Error code: ${err.code} | Category: ${err.category} | ${err.message || ""}`);
+      const clearKeys = parseKeys(keysRaw);
+      if (Object.keys(clearKeys).length > 0) {
+        player.configure({
+          drm: { clearKeys }
         });
       }
 
-      const config = {
-        streaming: {
-          retryParameters: {
-            timeout: 15000,
-            maxAttempts: 4,
-            baseDelay: 1000,
-            backoffFactor: 1.5,
-            fuzzFactor: 0.5
-          }
-        }
-      };
-
-      if (Object.keys(clearKeys).length > 0) {
-        config.drm = {
-          clearKeys: clearKeys
-        };
-      }
-
-      playerInstance.configure(config);
-
       try {
-        await playerInstance.load(manifestUri);
+        await player.load(mpdUrl);
+        video.play().catch(() => {});
       } catch (e) {
-        showError(`Load error: ${e.code || ""} ${e.message || e}`);
+        console.error("Playback error:", e);
       }
-    }
-
-    document.addEventListener("DOMContentLoaded", initPlayer);
+    });
   </script>
 </body>
 </html>
