@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Player - dash.js ClearKey</title>
-  <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
+  <title>Player - Shaka Compat</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.11.7/shaka-player.compiled.min.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -53,47 +53,68 @@
       el.textContent = msg;
     }
 
-    function parseKeysMap(raw) {
+    function parseKeys(raw) {
       const map = {};
       if (!raw) return map;
-      raw.split(/[\r\n,\s]+/).forEach(item => {
-        const parts = item.trim().split(":");
-        if (parts.length === 2 && parts[0] && parts[1]) {
-          map[parts[0].trim().toLowerCase()] = parts[1].trim().toLowerCase();
+      raw.split(/[\r\n,\s]+/).forEach(entry => {
+        const [kid, key] = entry.split(":");
+        if (kid && key) {
+          map[kid.trim().toLowerCase()] = key.trim().toLowerCase();
         }
       });
       return map;
     }
 
-    window.addEventListener("DOMContentLoaded", () => {
+    window.addEventListener("DOMContentLoaded", async () => {
+      shaka.polyfill.installAll();
+
       const params = new URLSearchParams(window.location.search);
-      const url = (params.get("mpd") || DEFAULT_MPD).trim();
-      const keysRaw = (params.get("keys") || DEFAULT_KEYS).trim();
-      const clearKeys = parseKeysMap(keysRaw);
+      const mpd = (params.get("mpd") || DEFAULT_MPD).trim();
+      const keys = parseKeys((params.get("keys") || DEFAULT_KEYS).trim());
 
       const video = document.getElementById("video");
-      const player = dashjs.MediaPlayer().create();
+      const player = new shaka.Player(video);
 
-      player.updateSettings({
+      player.configure({
+        drm: {
+          clearKeys: keys,
+          advanced: {
+            "org.w3.clearkey": {
+              videoRobustness: "",
+              audioRobustness: ""
+            }
+          }
+        },
+        manifest: {
+          dash: {
+            ignoreMinBufferTime: true,
+            autoCorrectDrift: true
+          }
+        },
         streaming: {
-          retryAttempts: { MPD: 4, MediaSegment: 4 },
-          retryInterval: 1000
+          bufferingGoal: 20,
+          rebufferingGoal: 2,
+          retryParameters: {
+            timeout: 15000,
+            maxAttempts: 5,
+            baseDelay: 800,
+            backoffFactor: 1.5,
+            fuzzFactor: 0.5
+          }
         }
       });
 
-      if (Object.keys(clearKeys).length > 0) {
-        player.setProtectionData({
-          "org.w3.clearkey": {
-            clearkeys: clearKeys
-          }
-        });
-      }
-
-      player.on(dashjs.MediaPlayer.events.ERROR, (e) => {
-        showErr("dash.js Error: " + JSON.stringify(e.error || e));
+      player.addEventListener("error", (e) => {
+        const d = e.detail || {};
+        showErr(`Shaka Error ${d.code || ""} (Cat ${d.category || ""}): ${d.message || ""}`);
       });
 
-      player.initialize(video, url, true);
+      try {
+        await player.load(mpd);
+        await video.play();
+      } catch (err) {
+        showErr(`Load Error: ${err.code || ""} ${err.message || err}`);
+      }
     });
   </script>
 </body>
