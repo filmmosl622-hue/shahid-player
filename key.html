@@ -3,110 +3,46 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Player - Plyr + Shaka</title>
-  <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
-  <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/shaka-player@4.11.7/dist/shaka-player.compiled.min.js"></script>
+  <title>Player - dash.js</title>
+  <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    html, body {
-      width: 100%;
-      height: 100%;
-      background: #000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-    .box {
-      width: 100%;
-      max-width: 100%;
-    }
-    video {
-      width: 100%;
-      max-height: 100vh;
-      background: #000;
-    }
-    #err {
-      position: fixed;
-      bottom: 10px;
-      left: 10px;
-      right: 10px;
-      background: rgba(120, 0, 0, 0.85);
-      color: #fff;
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-size: 13px;
-      direction: ltr;
-      display: none;
-      z-index: 99;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
+    video { width: 100%; height: 100%; object-fit: contain; background: #000; display: block; }
   </style>
 </head>
 <body>
-  <div class="box">
-    <video id="video" controls autoplay playsinline></video>
-  </div>
-  <div id="err"></div>
+  <video id="video" controls autoplay playsinline></video>
 
   <script>
     const DEFAULT_MPD = "https://mbc-aws-ksa.mncdn.com/vod/aws/3060004241-STXML/cbd84042023a437fbd6d18dd093402ec/7c201da305b543e0ae55a3673f9aa3a5/840aa317c6f34c8fb0ef18117f07c496/index.mpd";
     const DEFAULT_KEYS = "990663bead8f4e4cb63e724703af8d44:145a0823f144005555106ba54d89fd16";
 
-    function showErr(msg) {
-      const el = document.getElementById("err");
-      el.style.display = "block";
-      el.textContent = msg;
-    }
-
     function parseKeys(raw) {
       const map = {};
       if (!raw) return map;
-      raw.split(/[\r\n,\s]+/).forEach(entry => {
-        const [kid, key] = entry.split(":");
-        if (kid && key) {
-          map[kid.trim().toLowerCase()] = key.trim().toLowerCase();
-        }
+      raw.split(/[\r\n,\s]+/).forEach(part => {
+        const [kid, key] = part.trim().split(":");
+        if (kid && key) map[kid.trim().toLowerCase()] = key.trim().toLowerCase();
       });
       return map;
     }
 
-    window.addEventListener("DOMContentLoaded", async () => {
-      shaka.polyfill.installAll();
-
+    window.addEventListener("DOMContentLoaded", () => {
       const params = new URLSearchParams(window.location.search);
-      const mpd = (params.get("mpd") || DEFAULT_MPD).trim();
+      const url = (params.get("mpd") || DEFAULT_MPD).trim();
       const keys = parseKeys((params.get("keys") || DEFAULT_KEYS).trim());
 
       const video = document.getElementById("video");
-      const plyr = new Plyr(video, {
-        controls: ["play-large", "play", "progress", "current-time", "mute", "volume", "settings", "fullscreen"]
-      });
-
-      const player = new shaka.Player();
-      await player.attach(video);
+      const player = dashjs.MediaPlayer().create();
 
       if (Object.keys(keys).length > 0) {
-        player.configure({
-          drm: { clearKeys: keys }
+        player.setProtectionData({
+          "org.w3.clearkey": { clearkeys: keys }
         });
       }
 
-      player.addEventListener("error", (e) => {
-        const d = e.detail || {};
-        showErr(`Error ${d.code || ""}: ${d.message || ""}`);
-      });
-
-      try {
-        await player.load(mpd);
-        await video.play();
-      } catch (err) {
-        showErr(`Load Error: ${err.code || ""} ${err.message || err}`);
-      }
+      player.initialize(video, url, true);
     });
   </script>
 </body>
