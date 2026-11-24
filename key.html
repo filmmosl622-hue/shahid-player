@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Player - Shaka Compat</title>
+  <title>Player - Plyr + Shaka</title>
+  <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+  <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.11.7/shaka-player.compiled.min.js"></script>
   <style>
     * {
@@ -15,14 +17,19 @@
       width: 100%;
       height: 100%;
       background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       overflow: hidden;
+    }
+    .box {
+      width: 100%;
+      max-width: 100%;
     }
     video {
       width: 100%;
-      height: 100%;
-      object-fit: contain;
+      max-height: 100vh;
       background: #000;
-      display: block;
     }
     #err {
       position: fixed;
@@ -36,11 +43,14 @@
       font-size: 13px;
       direction: ltr;
       display: none;
+      z-index: 99;
     }
   </style>
 </head>
 <body>
-  <video id="video" controls autoplay playsinline></video>
+  <div class="box">
+    <video id="video" controls autoplay playsinline></video>
+  </div>
   <div id="err"></div>
 
   <script>
@@ -73,40 +83,22 @@
       const keys = parseKeys((params.get("keys") || DEFAULT_KEYS).trim());
 
       const video = document.getElementById("video");
-      const player = new shaka.Player(video);
-
-      player.configure({
-        drm: {
-          clearKeys: keys,
-          advanced: {
-            "org.w3.clearkey": {
-              videoRobustness: "",
-              audioRobustness: ""
-            }
-          }
-        },
-        manifest: {
-          dash: {
-            ignoreMinBufferTime: true,
-            autoCorrectDrift: true
-          }
-        },
-        streaming: {
-          bufferingGoal: 20,
-          rebufferingGoal: 2,
-          retryParameters: {
-            timeout: 15000,
-            maxAttempts: 5,
-            baseDelay: 800,
-            backoffFactor: 1.5,
-            fuzzFactor: 0.5
-          }
-        }
+      const plyr = new Plyr(video, {
+        controls: ["play-large", "play", "progress", "current-time", "mute", "volume", "settings", "fullscreen"]
       });
+
+      const player = new shaka.Player();
+      await player.attach(video);
+
+      if (Object.keys(keys).length > 0) {
+        player.configure({
+          drm: { clearKeys: keys }
+        });
+      }
 
       player.addEventListener("error", (e) => {
         const d = e.detail || {};
-        showErr(`Shaka Error ${d.code || ""} (Cat ${d.category || ""}): ${d.message || ""}`);
+        showErr(`Error ${d.code || ""}: ${d.message || ""}`);
       });
 
       try {
