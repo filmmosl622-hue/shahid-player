@@ -1,111 +1,141 @@
-HTML
-
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<!DOCTYPE html>   
+<!-- HTML : APP24/MOB -->
+<html lang="ar">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>مشغل الفيديو - Star Cinema</title>
+<title>Star Cinema</title>
+<!-- تم دمج الخطوط في طلب واحد وإزالة مكتبات الأيقونات غير المستخدمة لتسريع الرندر -->
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500&family=Roboto:wght@300&family=Readex+Pro:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<!-- مكتبة Shaka Player لتشغيل البث المشفر MPD/ClearKey -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.min.js"></script>
-<style>
-  * {
-    box-sizing: border-box;
+<style type="text/css">
+body {
+padding:0;
+margin:0;
+user-select:none;
+list-style:none;
+background:#fff;
+font-family: 'Readex Pro', sans-serif;
+}
+header {
+background:#26ab56;
+padding:0 15px;
+color:#fff;
+margin-bottom:10px;
+position:fixed;
+top:0;
+height:60px;
+width:100%;
+box-shadow: 0px 0px 7px black;
+z-index:10;
+display: flex;
+align-items: center;
+justify-content: space-between;
+box-sizing: border-box;
+}
+h3 {
+text-align:right;
+font-size:medium;
+font-weight:200;
+margin:0;
+color: #fff;
+}
+/* تنسيق زر الريلود العلوي */
+.reload-btn {
+background: rgba(255, 255, 255, 0.2);
+border: none;
+color: #fff;
+padding: 6px 10px;
+border-radius: 6px;
+cursor: pointer;
+font-size: 13px;
+display: flex;
+align-items: center;
+gap: 5px;
+font-family: 'Readex Pro', sans-serif;
+}
+.reload-btn:active {
+background: rgba(0, 0, 0, 0.3);
+}
+#page:hover {
+background:none;
+}
+#page {
+margin-top:75px;
+width:98%;
+padding-right:4px;
+padding-left:2px;
+}
+#page a:hover {
+background:#111;
+}
+#page a {
+width:110px;
+border:2px solid #2ecb66;
+height:120px;
+display:inline-block;
+border-radius:8px;
+margin-bottom:10px;
+text-decoration:none;
+position: relative;
+overflow: hidden;
+}
+#page a img {
+height:120px;
+margin-right:0px;
+width:100%;
+border-radius:8px;
+}
+#page a .episode-title {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(128, 0, 0);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    padding: 4px 0;
     margin: 0;
-    padding: 0;
-  }
-  html, body {
-    width: 100vw;
-    height: 100vh;
-    background: #000;
-    overflow: hidden;
-  }
-  #player-container {
+}
+
+/* مشغل الفيديو شاشة كاملة داخل الصفحة عند تشغيل حلقة */
+#shaka-overlay {
+    display: none;
     position: fixed;
     inset: 0;
     width: 100vw;
     height: 100vh;
     background: #000;
-  }
-  video {
-    width: 100%;
-    height: 100%;
+    z-index: 9999;
+}
+#shaka-overlay.active {
+    display: block;
+}
+#shaka-video {
+    width: 100vw;
+    height: 100vh;
     object-fit: contain;
     background: #000;
-  }
+}
+#close-shaka-btn {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 10000;
+    background: rgba(0, 0, 0, 0.65);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: 'Readex Pro', sans-serif;
+}
 </style>
-</head>
-<body>
-<div id="player-container">
-  <video id="video" controls autoplay playsinline></video>
-</div>
-
-<script>
-function enterFullscreen() {
-  const target = document.getElementById('player-container') || document.documentElement;
-  if (!document.fullscreenElement && target.requestFullscreen) {
-    target.requestFullscreen().catch(() => {});
-  } else if (!document.webkitFullscreenElement && target.webkitRequestFullscreen) {
-    target.webkitRequestFullscreen();
-  }
-}
-
-function parseClearKeys(keysParam) {
-  const clearKeys = {};
-  if (!keysParam) return clearKeys;
-  keysParam.split(',').forEach(pair => {
-    const [kid, key] = pair.trim().split(':');
-    if (kid && key) {
-      clearKeys[kid.trim()] = key.trim();
-    }
-  });
-  return clearKeys;
-}
-
-async function initPlayer() {
-  const params = new URLSearchParams(window.location.search);
-  const mpdUrl = params.get('mpd');
-  const keysParam = params.get('keys');
-  const video = document.getElementById('video');
-
-  if (!mpdUrl) return;
-
-  shaka.polyfill.installAll();
-
-  if (!shaka.Player.isBrowserSupported()) {
-    console.error('Shaka Player غير مدعوم على هذا المتصفح');
-    return;
-  }
-
-  const player = new shaka.Player();
-  await player.attach(video);
-
-  const clearKeys = parseClearKeys(keysParam);
-  if (Object.keys(clearKeys).length > 0) {
-    player.configure({
-      drm: {
-        clearKeys: clearKeys
-      }
-    });
-  }
-
-  player.addEventListener('error', (event) => {
-    console.error('Shaka Error:', event.detail);
-  });
-
-  try {
-    await player.load(mpdUrl);
-    video.play().catch(() => {});
-  } catch (e) {
-    console.error('فشل تحميل الفيديو:', e);
-  }
-}
-
-document.addEventListener('click', enterFullscreen, { once: true });
-window.addEventListener('DOMContentLoaded', () => {
-  initPlayer();
-  setTimeout(enterFullscreen, 500);
-});
-</script>
 </head>
 <!-- BY MoCreators -->
 <body dir="rtl">
@@ -292,11 +322,107 @@ window.addEventListener('DOMContentLoaded', () => {
 
 </div>
 
+<!-- حاوية تشغيل Shaka Player شاشة كاملة -->
+<div id="shaka-overlay">
+    <button id="close-shaka-btn" onclick="closeShakaPlayer()">✕ إغلاق</button>
+    <video id="shaka-video" controls autoplay playsinline></video>
+</div>
+
 <!-- كود التحديث التلقائي كل 10 ثانية (10000 ميلي ثانية) -->
 <script>
-setTimeout(function(){
+let refreshTimer = setTimeout(function(){
     location.reload();
 }, 10000);
+
+let shakaInstance = null;
+
+function parseClearKeys(keysParam) {
+    const clearKeys = {};
+    if (!keysParam) return clearKeys;
+    keysParam.split(',').forEach(pair => {
+        const [kid, key] = pair.trim().split(':');
+        if (kid && key) {
+            clearKeys[kid.trim()] = key.trim();
+        }
+    });
+    return clearKeys;
+}
+
+function enterPlayerFullscreen() {
+    const overlay = document.getElementById('shaka-overlay');
+    if (!document.fullscreenElement && overlay.requestFullscreen) {
+        overlay.requestFullscreen().catch(() => {});
+    } else if (!document.webkitFullscreenElement && overlay.webkitRequestFullscreen) {
+        overlay.webkitRequestFullscreen();
+    }
+}
+
+async function openShakaFromUrl(fullUrl) {
+    try {
+        const parsed = new URL(fullUrl);
+        const mpdUrl = parsed.searchParams.get('mpd');
+        const keysParam = parsed.searchParams.get('keys');
+        if (!mpdUrl) return false;
+
+        clearTimeout(refreshTimer);
+
+        const overlay = document.getElementById('shaka-overlay');
+        const video = document.getElementById('shaka-video');
+        overlay.classList.add('active');
+
+        shaka.polyfill.installAll();
+        if (!shaka.Player.isBrowserSupported()) return false;
+
+        if (!shakaInstance) {
+            shakaInstance = new shaka.Player();
+            await shakaInstance.attach(video);
+        }
+
+        const clearKeys = parseClearKeys(keysParam);
+        shakaInstance.configure({
+            drm: Object.keys(clearKeys).length > 0 ? { clearKeys: clearKeys } : {}
+        });
+
+        await shakaInstance.load(mpdUrl);
+        video.play().catch(() => {});
+        setTimeout(enterPlayerFullscreen, 250);
+        return true;
+    } catch (e) {
+        console.error('Shaka load error:', e);
+        return false;
+    }
+}
+
+async function closeShakaPlayer() {
+    const overlay = document.getElementById('shaka-overlay');
+    const video = document.getElementById('shaka-video');
+    video.pause();
+    if (shakaInstance) {
+        await shakaInstance.unload().catch(() => {});
+    }
+    if (document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+    } else if (document.webkitFullscreenElement && document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+    }
+    overlay.classList.remove('active');
+    refreshTimer = setTimeout(function(){
+        location.reload();
+    }, 10000);
+}
+
+document.querySelectorAll('#page a[href*="key.html"]').forEach(link => {
+    link.addEventListener('click', function(e) {
+        e.preventDefault();
+        openShakaFromUrl(this.href);
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.location.search.includes('mpd=')) {
+        openShakaFromUrl(window.location.href);
+    }
+});
 </script>
 
 </body>
