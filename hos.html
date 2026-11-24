@@ -147,6 +147,21 @@ font-size: 12px;
 margin-top: 8px;
 text-align: center;
 }
+
+/* إخفاء أي إعلانات أو إطارات محقونة */
+iframe:not(#shaka-video),
+ins.adsbygoogle,
+[class*="ad-banner"],
+[class*="adsbox"],
+[id*="google_ads"],
+[id*="ad-container"],
+[class*="popup-ad"] {
+    display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    height: 0 !important;
+    pointer-events: none !important;
+}
 </style>
 </head>
 <!-- BY MoCreators -->
@@ -485,6 +500,37 @@ document.getElementById('page').addEventListener('click', function(e) {
 
 // بدء مؤقت التحديث التلقائي عند تحميل الصفحة
 startAutoReload();
+
+// منع النوافذ المنبثقة (Popups)
+window.open = function() { return null; };
+
+// مراقبة الصفحة وحذف أي إعلانات أو iframes يتم حقنها تلقائياً
+(function() {
+    const adKeywords = ['ads', 'adserver', 'doubleclick', 'googlesyndication', 'popads', 'adsterra', 'propeller', 'banner'];
+
+    function removeAds(node) {
+        if (node.nodeType !== 1) return;
+        const tag = node.tagName.toLowerCase();
+        const src = (node.getAttribute('src') || '').toLowerCase();
+        const id = (node.id || '').toLowerCase();
+        const cls = (typeof node.className === 'string' ? node.className : '').toLowerCase();
+
+        // تجاهل عناصر المشغل والصفحة الأساسية
+        if (id === 'shaka-modal' || id === 'page' || id === 'shaka-video') return;
+
+        if (tag === 'iframe' || tag === 'ins' || adKeywords.some(k => src.includes(k) || id.includes(k) || cls.includes(k))) {
+            node.remove();
+        }
+    }
+
+    const observer = new MutationObserver(mutations => {
+        mutations.forEach(m => {
+            m.addedNodes.forEach(node => removeAds(node));
+        });
+    });
+
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+})();
 </script>
 
 </body>
