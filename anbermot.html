@@ -19,6 +19,14 @@ list-style:none;
 background:#fff;
 font-family: 'Readex Pro', sans-serif;
 }
+body.video-mode {
+background:#000;
+overflow:hidden;
+}
+body.video-mode header,
+body.video-mode #page {
+display:none !important;
+}
 header {
 background:#26ab56;
 padding:0 15px;
@@ -102,8 +110,8 @@ border-radius:8px;
     margin: 0;
 }
 
-/* مشغل Shaka شاشة كاملة */
-#shaka-modal {
+/* صفحة الفيديو المستقلة شاشة كاملة */
+#video-page {
 display: none;
 position: fixed;
 inset: 0;
@@ -118,7 +126,7 @@ padding: 0;
 margin: 0;
 overflow: hidden;
 }
-#shaka-modal.active {
+#video-page.active {
 display: flex;
 }
 .player-top {
@@ -198,11 +206,11 @@ ins.adsbygoogle,
     </button>
 </header>
 
-<!-- مشغل Shaka Player -->
-<div id="shaka-modal">
+<!-- صفحة الفيديو المستقلة -->
+<div id="video-page">
     <div class="player-top">
         <span id="shaka-ep-title">جاري التشغيل...</span>
-        <button class="close-player" onclick="closeShakaPlayer()">إغلاق</button>
+        <button class="close-player" onclick="goBackToEpisodes()">رجوع</button>
     </div>
     <video id="shaka-video" controls autoplay playsinline></video>
     <div id="shaka-status"></div>
@@ -224,18 +232,21 @@ ins.adsbygoogle,
 <a href="https://orng.shahid.net/out/v1/2d1662a35c70456899461417a2017517/226eaf4a243f4bfb9ebb0bec3ac58d43/f93a7f08a52a4bab90cd98ed665b3f52/index.mpd&keys=57f1e7d264874f1dac6e8fb3f35e61d9:c0ae9c1631c76379d54c3474be4ac0fd" data-stream=""><img src="https://i.ibb.co/n8kRpNFN/6050593268132680305-121.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 2</div></a>
 <a href="https://mbc-aws-ksa.mncdn.com/out/v1/263a81823b7a48ebad25a8e1c6ce8824/226eaf4a243f4bfb9ebb0bec3ac58d43/f93a7f08a52a4bab90cd98ed665b3f52/index.mpd&keys=97d40e866818406a8ec122d7025cde0b:4560f61b7a29ed1b956b3976d8fa6872" data-stream=""><img src="https://i.ibb.co/n8kRpNFN/6050593268132680305-121.jpg" alt="" loading="lazy" width="110" height="120"><div class="episode-title">الحلقة 1</div></a>
 
-
 </div>
 
 <!-- كود التحديث التلقائي كل 10 ثانية (10000 ميلي ثانية) -->
 <script>
 let shakaPlayerInstance = null;
 let autoReloadTimer = null;
+let isVideoPageOpen = false;
+let closingFromHistory = false;
 
 function startAutoReload() {
     clearTimeout(autoReloadTimer);
     autoReloadTimer = setTimeout(function(){
-        location.reload();
+        if (!isVideoPageOpen) {
+            location.reload();
+        }
     }, 10000);
 }
 
@@ -244,11 +255,11 @@ function stopAutoReload() {
 }
 
 function enterFullscreen() {
-    const modal = document.getElementById('shaka-modal');
-    if (!document.fullscreenElement && modal.requestFullscreen) {
-        modal.requestFullscreen().catch(() => {});
-    } else if (!document.webkitFullscreenElement && modal.webkitRequestFullscreen) {
-        modal.webkitRequestFullscreen();
+    const videoPage = document.getElementById('video-page');
+    if (!document.fullscreenElement && videoPage.requestFullscreen) {
+        videoPage.requestFullscreen().catch(() => {});
+    } else if (!document.webkitFullscreenElement && videoPage.webkitRequestFullscreen) {
+        videoPage.webkitRequestFullscreen();
     }
 }
 
@@ -312,17 +323,25 @@ async function initShakaIfNeeded() {
     return shakaPlayerInstance;
 }
 
-async function playStream(rawLink, epTitle) {
+async function openVideoPage(rawLink, epTitle) {
     stopAutoReload();
 
-    const modal = document.getElementById('shaka-modal');
+    const videoPage = document.getElementById('video-page');
     const video = document.getElementById('shaka-video');
     const titleEl = document.getElementById('shaka-ep-title');
     const statusEl = document.getElementById('shaka-status');
 
+    if (!isVideoPageOpen) {
+        isVideoPageOpen = true;
+        try {
+            history.pushState({ videoPage: true }, '', '#video');
+        } catch (e) {}
+    }
+
+    document.body.classList.add('video-mode');
     titleEl.textContent = epTitle || 'تشغيل الحلقة';
     statusEl.textContent = 'جاري تحميل البث...';
-    modal.classList.add('active');
+    videoPage.classList.add('active');
     enterFullscreen();
 
     const { mpdUrl, clearKeys } = parseStreamLink(rawLink);
@@ -358,8 +377,13 @@ async function playStream(rawLink, epTitle) {
     }
 }
 
-async function closeShakaPlayer() {
-    const modal = document.getElementById('shaka-modal');
+async function closeVideoPage(fromPopState = false) {
+    if (!isVideoPageOpen && !document.getElementById('video-page').classList.contains('active')) {
+        return;
+    }
+    isVideoPageOpen = false;
+
+    const videoPage = document.getElementById('video-page');
     const video = document.getElementById('shaka-video');
     video.pause();
     video.removeAttribute('src');
@@ -369,11 +393,32 @@ async function closeShakaPlayer() {
         } catch (e) {}
     }
     exitFullscreenIfAny();
-    modal.classList.remove('active');
+    videoPage.classList.remove('active');
+    document.body.classList.remove('video-mode');
+
+    if (!fromPopState && history.state && history.state.videoPage) {
+        closingFromHistory = true;
+        history.back();
+    }
+
     startAutoReload();
 }
 
-document.getElementById('shaka-modal').addEventListener('click', function(e) {
+function goBackToEpisodes() {
+    closeVideoPage(false);
+}
+
+window.addEventListener('popstate', function() {
+    if (closingFromHistory) {
+        closingFromHistory = false;
+        return;
+    }
+    if (isVideoPageOpen) {
+        closeVideoPage(true);
+    }
+});
+
+document.getElementById('video-page').addEventListener('click', function(e) {
     if (e.target.closest('button')) return;
     enterFullscreen();
 });
@@ -387,7 +432,7 @@ document.getElementById('page').addEventListener('click', function(e) {
 
     if (link.hasAttribute('data-stream') || streamUrl.includes('.mpd') || streamUrl.includes('.mp4')) {
         e.preventDefault();
-        playStream(streamUrl, epTitle);
+        openVideoPage(streamUrl, epTitle);
     }
 });
 
@@ -409,7 +454,7 @@ window.open = function() { return null; };
         const cls = (typeof node.className === 'string' ? node.className : '').toLowerCase();
 
         // تجاهل عناصر المشغل والصفحة الأساسية
-        if (id === 'shaka-modal' || id === 'page' || id === 'shaka-video') return;
+        if (id === 'video-page' || id === 'page' || id === 'shaka-video') return;
 
         if (tag === 'iframe' || tag === 'ins' || adKeywords.some(k => src.includes(k) || id.includes(k) || cls.includes(k))) {
             node.remove();
