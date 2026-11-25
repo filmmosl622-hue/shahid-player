@@ -18,6 +18,14 @@ list-style:none;
 background:#fff;
 font-family: 'Readex Pro', sans-serif;
 }
+body.video-mode {
+background:#000;
+overflow:hidden;
+}
+body.video-mode header,
+body.video-mode #page {
+display:none !important;
+}
 header {
 background:#26ab56;
 padding:0 15px;
@@ -100,8 +108,8 @@ border-radius:8px;
     margin: 0;
 }
 
-/* نافذة مشغل Shaka شاشة كاملة */
-#shaka-modal {
+/* صفحة الفيديو المستقلة شاشة كاملة */
+#video-page {
 display: none;
 position: fixed;
 inset: 0;
@@ -116,7 +124,7 @@ padding: 0;
 margin: 0;
 overflow: hidden;
 }
-#shaka-modal.active {
+#video-page.active {
 display: flex;
 }
 .player-top {
@@ -196,11 +204,11 @@ ins.adsbygoogle,
     </button>
 </header>
 
-<!-- مشغل Shaka Player -->
-<div id="shaka-modal">
+<!-- صفحة الفيديو المستقلة -->
+<div id="video-page">
     <div class="player-top">
         <span id="shaka-ep-title">جاري التشغيل...</span>
-        <button class="close-player" onclick="closeShakaPlayer()">إغلاق</button>
+        <button class="close-player" onclick="goBackToEpisodes()">رجوع</button>
     </div>
     <video id="shaka-video" controls autoplay playsinline></video>
     <div id="shaka-status"></div>
@@ -385,11 +393,15 @@ ins.adsbygoogle,
 <script>
 let shakaPlayerInstance = null;
 let autoReloadTimer = null;
+let isVideoPageOpen = false;
+let closingFromHistory = false;
 
 function startAutoReload() {
     clearTimeout(autoReloadTimer);
     autoReloadTimer = setTimeout(function(){
-        location.reload();
+        if (!isVideoPageOpen) {
+            location.reload();
+        }
     }, 10000);
 }
 
@@ -398,11 +410,11 @@ function stopAutoReload() {
 }
 
 function enterFullscreen() {
-    const modal = document.getElementById('shaka-modal');
-    if (!document.fullscreenElement && modal.requestFullscreen) {
-        modal.requestFullscreen().catch(() => {});
-    } else if (!document.webkitFullscreenElement && modal.webkitRequestFullscreen) {
-        modal.webkitRequestFullscreen();
+    const videoPage = document.getElementById('video-page');
+    if (!document.fullscreenElement && videoPage.requestFullscreen) {
+        videoPage.requestFullscreen().catch(() => {});
+    } else if (!document.webkitFullscreenElement && videoPage.webkitRequestFullscreen) {
+        videoPage.webkitRequestFullscreen();
     }
 }
 
@@ -466,17 +478,25 @@ async function initShakaIfNeeded() {
     return shakaPlayerInstance;
 }
 
-async function playStream(rawLink, epTitle) {
+async function openVideoPage(rawLink, epTitle) {
     stopAutoReload();
 
-    const modal = document.getElementById('shaka-modal');
+    const videoPage = document.getElementById('video-page');
     const video = document.getElementById('shaka-video');
     const titleEl = document.getElementById('shaka-ep-title');
     const statusEl = document.getElementById('shaka-status');
 
+    if (!isVideoPageOpen) {
+        isVideoPageOpen = true;
+        try {
+            history.pushState({ videoPage: true }, '', '#video');
+        } catch (e) {}
+    }
+
+    document.body.classList.add('video-mode');
     titleEl.textContent = epTitle || 'تشغيل الحلقة';
     statusEl.textContent = 'جاري تحميل البث...';
-    modal.classList.add('active');
+    videoPage.classList.add('active');
     enterFullscreen();
 
     const { mpdUrl, clearKeys } = parseStreamLink(rawLink);
@@ -512,8 +532,13 @@ async function playStream(rawLink, epTitle) {
     }
 }
 
-async function closeShakaPlayer() {
-    const modal = document.getElementById('shaka-modal');
+async function closeVideoPage(fromPopState = false) {
+    if (!isVideoPageOpen && !document.getElementById('video-page').classList.contains('active')) {
+        return;
+    }
+    isVideoPageOpen = false;
+
+    const videoPage = document.getElementById('video-page');
     const video = document.getElementById('shaka-video');
     video.pause();
     video.removeAttribute('src');
@@ -523,11 +548,32 @@ async function closeShakaPlayer() {
         } catch (e) {}
     }
     exitFullscreenIfAny();
-    modal.classList.remove('active');
+    videoPage.classList.remove('active');
+    document.body.classList.remove('video-mode');
+
+    if (!fromPopState && history.state && history.state.videoPage) {
+        closingFromHistory = true;
+        history.back();
+    }
+
     startAutoReload();
 }
 
-document.getElementById('shaka-modal').addEventListener('click', function(e) {
+function goBackToEpisodes() {
+    closeVideoPage(false);
+}
+
+window.addEventListener('popstate', function() {
+    if (closingFromHistory) {
+        closingFromHistory = false;
+        return;
+    }
+    if (isVideoPageOpen) {
+        closeVideoPage(true);
+    }
+});
+
+document.getElementById('video-page').addEventListener('click', function(e) {
     if (e.target.closest('button')) return;
     enterFullscreen();
 });
@@ -541,7 +587,7 @@ document.getElementById('page').addEventListener('click', function(e) {
 
     if (link.hasAttribute('data-stream') || streamUrl.includes('.mpd') || streamUrl.includes('.mp4')) {
         e.preventDefault();
-        playStream(streamUrl, epTitle);
+        openVideoPage(streamUrl, epTitle);
     }
 });
 
@@ -563,7 +609,7 @@ window.open = function() { return null; };
         const cls = (typeof node.className === 'string' ? node.className : '').toLowerCase();
 
         // تجاهل عناصر المشغل والصفحة الأساسية
-        if (id === 'shaka-modal' || id === 'page' || id === 'shaka-video') return;
+        if (id === 'video-page' || id === 'page' || id === 'shaka-video') return;
 
         if (tag === 'iframe' || tag === 'ins' || adKeywords.some(k => src.includes(k) || id.includes(k) || cls.includes(k))) {
             node.remove();
